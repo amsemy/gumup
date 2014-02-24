@@ -185,7 +185,7 @@
                 expect(other.modules.Ccc.name).toBe("CCC");
             });
 
-            xit("must import required modules", function() {
+            it("must import required modules", function() {
                 ns.module('aaa', moduleName("AAA"));
                 ns.object('Bbb', objectName("BBB"))
                         .require('aaa');

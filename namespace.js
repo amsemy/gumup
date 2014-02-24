@@ -67,12 +67,6 @@
             return this;
         };
 
-        this._cache = {
-            inited: {},
-            resolved: {},
-            root: {}
-        };
-
         this._declarations = {};
 
         /**
@@ -129,17 +123,22 @@
      * их порядок инициализации не оговаривается.
      */
     Namespace.prototype.init = function() {
+        var cache = {
+            inited: {},
+            resolved: {},
+            root: {}
+        };
         this.Declaration.prototype.require = inited;
         this.init = inited;
         this.module = inited;
         for (var d in this._declarations) {
-            this._cache.root[d] = true;
+            cache.root[d] = true;
         }
         for (var d in this._declarations) {
-            resolve(this._declarations, this._cache, d, []);
+            resolve(this._declarations, d, cache, {});
         }
-        for (var d in this._cache.root) {
-            initialize(this, this._declarations, this._cache, d);
+        for (var d in cache.root) {
+            initialize(this, this._declarations, d, cache);
         }
     };
 
@@ -306,6 +305,25 @@
         }
     }
 
+    function importModule(srcDecls, destDecls, name, imported, stack) {
+        forEach(srcDecls, name, function(depName) {
+            if (imported[depName] !== true) {
+                if (stack[depName] === true) {
+                    throw error("Recursive dependency '" + depName + "'");
+                }
+                stack[depName] = true;
+                var decl = srcDecls[depName];
+                var len = decl._dependencies.length;
+                for (var i = 0; i < len; i++) {
+                    var reqName = decl._dependencies[i];
+                    importModule(srcDecls, destDecls, reqName, imported, stack);
+                }
+                destDecls[depName] = decl;
+                imported[depName] = true;
+            }
+        });
+    }
+
     function importModules(namespace, settings) {
         var modules = (settings.modules == null ? [] : settings.modules);
         if (Object.prototype.toString.call(modules) !== "[object Array]") {
@@ -316,7 +334,8 @@
             if (!(settings.namespace instanceof Namespace)) {
                 throw error("Invalid namespace in import settings");
             }
-            var srcDecls = settings.namespace._declarations,
+            var imported = {},
+                srcDecls = settings.namespace._declarations,
                 destDecls = namespace._declarations;
             for (var i = 0; i < len; i++) {
                 var name = modules[i];
@@ -324,37 +343,22 @@
                     throw error("Invalid module name '"+ name
                             + "' in import settings");
                 }
-                forEach(srcDecls, name, function(depName) {
-                    destDecls[depName] = srcDecls[depName];
-                });
+                importModule(srcDecls, destDecls, name, imported, {});
             }
         }
-    }
-
-    function indexOf(array, item) {
-        var nativeIndexOf = Array.prototype.indexOf;
-        if (nativeIndexOf && array.indexOf === nativeIndexOf) {
-            return array.indexOf(item);
-        }
-        for (var i = 0, len = array.length; i < len; i++) {
-            if (array[i] === item) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     function inited() {
         throw error("Namespace has already been inited");
     }
 
-    function initialize(namespace, declarations, cache, name) {
+    function initialize(namespace, declarations, name, cache) {
         var decl = declarations[name];
         if (cache.inited[name] !== true) {
             var len = decl._dependenciesUncapped.length;
             for (var i = 0; i < len; i++) {
-                initialize(namespace, declarations, cache,
-                        decl._dependenciesUncapped[i]);
+                initialize(namespace, declarations,
+                        decl._dependenciesUncapped[i], cache);
             }
             var module;
             if (decl._isObject === true) {
@@ -368,14 +372,12 @@
         }
     }
 
-    function resolve(declarations, cache, name, stack) {
+    function resolve(declarations, name, cache, stack) {
         var decl = declarations[name];
         if (cache.resolved[name] !== true) {
-            //if (indexOf(stack, name) != -1) {
             if (stack[name] === true) {
                 throw error("Recursive dependency '" + name + "'");
             }
-            //stack.push(name);
             stack[name] = true;
             decl._dependenciesUncapped = [];
             var len = decl._dependencies.length;
@@ -385,12 +387,10 @@
                     if (depName !== name) {
                         delete cache.root[depName];
                         decl._dependenciesUncapped.push(depName);
-                        resolve(declarations, cache, depName, stack);
+                        resolve(declarations, depName, cache, stack);
                     }
                 });
             }
-            //stack.pop();
-            delete stack[name];
             cache.resolved[name] = true;
         }
     }
