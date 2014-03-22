@@ -124,6 +124,7 @@
                 other.init();
 
                 expect(other.modules).toEqual({});
+
                 //------------------------------------------------------------
                 other = new namespace.constructor();
 
@@ -188,11 +189,15 @@
             it("must import required modules", function() {
                 ns.module('aaa', moduleName("AAA"));
                 ns.object('Bbb', objectName("BBB"))
-                        .require('aaa');
+                    .require('aaa');
                 ns.module('ccc', moduleName("CCC"))
-                        .require('Bbb');
+                    .require('Bbb');
                 ns.object('Ddd', objectName("DDD"))
-                        .require('ccc');
+                    .require('ccc');
+                ns.object('eee.fff', objectName("FFF"));
+                ns.object('eee.ggg', objectName("GGG"));
+                ns.object('hhh', objectName("HHH"))
+                    .require('eee.fff');
 
                 //------------------------------------------------------------
                 other = new namespace.constructor();
@@ -207,6 +212,8 @@
                 expect(other.modules.Bbb.name).toBe("BBB");
                 expect(other.modules.ccc.name).toBe("CCC");
                 expect(other.modules.Ddd).toBeUndefined();
+                expect(other.modules.eee).toBeUndefined();
+                expect(other.modules.hhh).toBeUndefined();
 
                 //------------------------------------------------------------
                 other = new namespace.constructor();
@@ -221,6 +228,42 @@
                 expect(other.modules.Bbb.name).toBe("BBB");
                 expect(other.modules.ccc.name).toBe("CCC");
                 expect(other.modules.Ddd.name).toBe("DDD");
+                expect(other.modules.eee).toBeUndefined();
+                expect(other.modules.hhh).toBeUndefined();
+
+                //------------------------------------------------------------
+                other = new namespace.constructor();
+
+                other.import({
+                    namespace: ns,
+                    modules: ['eee.fff']
+                });
+                other.init();
+
+                expect(other.modules.aaa).toBeUndefined();
+                expect(other.modules.Bbb).toBeUndefined();
+                expect(other.modules.ccc).toBeUndefined();
+                expect(other.modules.Ddd).toBeUndefined();
+                expect(other.modules.eee.fff.name).toBe("FFF");
+                expect(other.modules.eee.ggg).toBeUndefined();
+                expect(other.modules.hhh).toBeUndefined();
+
+                //------------------------------------------------------------
+                other = new namespace.constructor();
+
+                other.import({
+                    namespace: ns,
+                    modules: ['hhh']
+                });
+                other.init();
+
+                expect(other.modules.aaa).toBeUndefined();
+                expect(other.modules.Bbb).toBeUndefined();
+                expect(other.modules.ccc).toBeUndefined();
+                expect(other.modules.Ddd).toBeUndefined();
+                expect(other.modules.eee.fff.name).toBe("FFF");
+                expect(other.modules.eee.ggg).toBeUndefined();
+                expect(other.modules.hhh.name).toBe("HHH");
             });
 
             it("must inject dependencies", function() {
@@ -601,7 +644,7 @@
 
                 ns.module('aaa', moduleName("AAA"));
                 ns.object('aaa.Bbb', objectName("AAA.BBB"))
-                        .require('aaa');
+                    .require('aaa');
                 ns.init();
 
                 expect(ns.modules.aaa.name).toBe("AAA");
@@ -612,7 +655,7 @@
 
                 ns.object('Aaa', objectName("AAA"));
                 ns.module('Aaa.bbb', moduleName("AAA.BBB"))
-                        .require('Aaa');
+                    .require('Aaa');
                 ns.init();
 
                 expect(ns.modules.Aaa.name).toBe("AAA");
@@ -625,7 +668,7 @@
                     this.bbb = "AAA";
                 });
                 ns.module('aaa.bbb', moduleName("AAA.BBB"))
-                        .require('aaa');
+                    .require('aaa');
 
                 expect(function() {
                     ns.init();
@@ -638,7 +681,7 @@
                     this.Bbb = "AAA";
                 });
                 ns.object('aaa.Bbb', objectName("AAA.BBB"))
-                        .require('aaa');
+                    .require('aaa');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -648,7 +691,7 @@
 
                 ns.module('aaa.bbb.ccc', moduleName("AAA.BBB.CCC"));
                 ns.module('aaa.bbb', moduleName("AAA.BBB"))
-                        .require('aaa.bbb.ccc');
+                    .require('aaa.bbb.ccc');
                 ns.init();
 
                 expect(ns.modules.aaa.bbb.ccc.name).toBe("AAA.BBB.CCC");
@@ -659,7 +702,7 @@
 
                 ns.module('aaa.Bbb.ccc', function() {});
                 ns.object('aaa.Bbb', objectName("AAA.BBB"))
-                        .require('aaa');
+                    .require('aaa');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -722,14 +765,14 @@
                 //------------------------------------------------------------
                 expect(ns.solution).toBeUndefined();
                 ns.module('c', init("C"))
-                        .require('b');
+                    .require('b');
                 ns.module('a', init("A"));
                 ns.module('d', init("D"))
-                        .require('a')
-                        .require('c')
-                        .require('b');
+                    .require('a')
+                    .require('c')
+                    .require('b');
                 ns.module('b', init("B"))
-                        .require('a');
+                    .require('a');
                 ns.init();
                 expect(ns.solution).toBe("ABCD");
 
@@ -738,12 +781,12 @@
 
                 expect(ns.solution).toBeUndefined();
                 ns.module('c', init("C"))
-                        .require('b');;
+                    .require('b');;
                 ns.module('a', init("A"));
                 ns.module('d', init("D"))
-                        .require('*');
+                    .require('*');
                 ns.module('b', init("B"))
-                        .require('a');
+                    .require('a');
                 ns.init();
                 expect(ns.solution).toBe("ABCD");
 
@@ -752,23 +795,23 @@
 
                 expect(ns.solution).toBeUndefined();
                 ns.module('c', init("C"))
-                        .require('b');
+                    .require('b');
                 ns.module('b.b3._2', init("_"))
-                        .require('b.b2');
+                    .require('b.b2');
                 ns.module('a', init("A"));
                 ns.module('b.b3._3', init("_"))
-                        .require('b.b2');
+                    .require('b.b2');
                 ns.module('b.b1', init("b1"))
-                        .require('a');
+                    .require('a');
                 ns.module('d', init("D"))
-                        .require('*');
+                    .require('*');
                 ns.module('b.b2', init("b2"))
-                        .require('b.b1');
+                    .require('b.b1');
                 ns.module('b', init("B"))
-                        .require('b.*')
-                        .require('a');
+                    .require('b.*')
+                    .require('a');
                 ns.module('b.b3._1', init("_"))
-                        .require('b.b2');
+                    .require('b.b2');
                 ns.init();
                 expect(ns.solution).toBe("Ab1b2___BCD");
 
@@ -776,32 +819,32 @@
                 ns = new namespace.constructor();
 
                 ns.module('a', function() {})
-                        .require('d')
-                        .require('e');
+                    .require('d')
+                    .require('e');
                 ns.module('b', function() {})
-                        .require('e');
+                    .require('e');
                 ns.module('c', function() {})
-                        .require('h')
-                        .require('f');
+                    .require('h')
+                    .require('f');
                 ns.module('d', function() {})
-                        .require('g');
+                    .require('g');
                 ns.module('e', function() {})
-                        .require('h');
+                    .require('h');
                 ns.module('f', function() {})
-                        .require('i');
+                    .require('i');
                 ns.module('g', function() {})
-                        .require('h')
-                        .require('j');
+                    .require('h')
+                    .require('j');
                 ns.module('h', function() {})
-                        .require('k');
+                    .require('k');
                 ns.module('i', function() {})
-                        .require('l');
+                    .require('l');
                 ns.module('j', function() {})
-                        .require('k');
+                    .require('k');
                 ns.module('k', function() {});
                 ns.module('l', function() {})
-                        .require('b')
-                        .require('k');
+                    .require('b')
+                    .require('k');
                 expect(function() {
                     ns.init();
                 }).not.toThrow();
@@ -847,33 +890,33 @@
                 ns = new namespace.constructor();
 
                 ns.module('a', function() {})
-                        .require('d')
-                        .require('e');
+                    .require('d')
+                    .require('e');
                 ns.module('b', function() {})
-                        .require('e');
+                    .require('e');
                 ns.module('c', function() {})
-                        .require('h')
-                        .require('f');
+                    .require('h')
+                    .require('f');
                 ns.module('d', function() {})
-                        .require('g');
+                    .require('g');
                 ns.module('e', function() {})
-                        .require('h');
+                    .require('h');
                 ns.module('f', function() {})
-                        .require('i');
+                    .require('i');
                 ns.module('g', function() {})
-                        .require('h')
-                        .require('j');
+                    .require('h')
+                    .require('j');
                 ns.module('h', function() {})
-                        .require('i')
-                        .require('k');
+                    .require('i')
+                    .require('k');
                 ns.module('i', function() {})
-                        .require('l');
+                    .require('l');
                 ns.module('j', function() {})
-                        .require('k');
+                    .require('k');
                 ns.module('k', function() {});
                 ns.module('l', function() {})
-                        .require('b')
-                        .require('k');
+                    .require('b')
+                    .require('k');
                 expect(function() {
                     ns.init();
                 }).toThrow();

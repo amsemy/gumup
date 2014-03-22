@@ -1,5 +1,5 @@
 // Namespace.js
-// version: 1.0.1
+// version: 1.0.0
 // author: Amsemy
 // license: MIT
 (function() {
