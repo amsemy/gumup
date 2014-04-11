@@ -6,7 +6,7 @@ module.exports = function(grunt) {
 
         meta: {
             banner:
-                '// Namespace.js\n' +
+                '// Gumup\n' +
                 '// version: <%= pkg.version %>\n' +
                 '// author: <%= pkg.author %>\n' +
                 '// license: <%= pkg.license %>\n'
@@ -18,7 +18,7 @@ module.exports = function(grunt) {
                     banner: '<%= meta.banner %>'
                 },
                 files: {
-                    'dist/namespace.js': 'src/namespace.js'
+                    'dist/gumup.js': 'src/gumup.js'
                 }
             }
         },
@@ -30,16 +30,16 @@ module.exports = function(grunt) {
                     report: 'gzip'
                 },
                 files: {
-                    'dist/namespace.min.js': 'dist/namespace.js'
+                    'dist/gumup.min.js': 'dist/gumup.js'
                 }
             }
         },
 
         jasmine: {
             all: {
-                src: 'dist/namespace.js',
+                src: 'dist/gumup.js',
                 options: {
-                    specs: 'spec/namespaceSpec.js'
+                    specs: 'spec/gumupSpec.js'
                 }
             }
         }

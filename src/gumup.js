@@ -18,28 +18,28 @@
         requireNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*(?:\.\*)?|\*)$/;
 
     /**
-     * Пространство имён.
+     * Create a dynamic namespace.
      *
      * @constructor
      */
-    var Namespace = function() {
+    var Gumup = function() {
 
         /**
-         * Функция, создающая объявленный модуль.
+         * Initialize the module.
          *
-         * @callback  Declaration~callback
-         * @param  {object} modules
-         *         Инициализированные зависимые модули.
+         * @callback  Gumup~implementation
+         * @param  {Gumup#modules} modules
+         *         Hash of initialized modules.
          * @returns  {object}
-         *           Созданный модуль.
+         *           Initialized module.
          */
 
         /**
-         * Объявление модуля пространства имён.
+         * Create a module declaration.
          *
          * @constructor
-         * @param  {Declaration~callback} implementation
-         *         Реализация модуля.
+         * @param  {Gumup~implementation} implementation
+         *         Function of module initialization.
          */
         var Declaration = this.Declaration = function(implementation) {
             this._dependencies = [];
@@ -48,17 +48,17 @@
         };
 
         /**
-         * Добавляет зависимость от другого модуля.
+         * Add dependency on the another module.
          *
          * @param  {string} reqName
-         *         Имя модуля. Можно указать зависимость от нескольких модулей
-         *         с помощью символа звездочки '*'. Например, 'foo.*' добавит
-         *         зависмость от всех модуелей, вложенных в 'foo' (кроме самого
-         *         'foo'). Если модуль зависит от всех существующих модулей, то
-         *         можно указать '*'.
+         *         Dependent module name. It supports masks using `*` symbol.
+         *         For example, the mask `foo.*` matches all the nested modules
+         *         of `foo` module (except the `foo` module). If the module
+         *         depends on all existing modules, the mask `*` can be used.
          * @return  {Declaration}
-         *          this.
+         *          Itself.
          */
+        // Add a dependency to the module.
         Declaration.prototype.require = function(reqName) {
             if (!checkRequireName(reqName)) {
                 throw error("Invalid require name '" + reqName + "'");
@@ -70,7 +70,7 @@
         this._declarations = {};
 
         /**
-         * Инициализированные модули.
+         * Hash that contains the initialized modules.
          *
          * @namespace
          */
@@ -78,51 +78,13 @@
 
     };
 
-    Namespace.prototype.constructor = Namespace;
+    Gumup.prototype.constructor = Gumup;
 
     /**
-     * Внедряемая зависимость.
-     *
-     * @namespace  Namespace~importDependency
-     * @property  {string} module
-     *            Имя модуля.
-     * @property  {*} implementation
-     *            Внедряемый объект. Если это строка, то она будет использована
-     *            как имя модуля из импортируемого пространства имён.
+     * Initialize the Gumup namespace with declared modules. Initialization
+     * order of modules depends on dependency resolution.
      */
-
-    /**
-     * Параметры импорта.
-     *
-     * @namespace  Namespace~importSettings
-     * @property  {Namespace} [namespace]
-     *            Импортируемое пространство имён.
-     * @property  {string[]} [modules]
-     *            Имена импортируемых модулей. {@link Declaration#require}
-     * @property  {Namespace~importDependency[]} [dependebcies]
-     *            Внедряемые зависимости.
-     */
-
-    /**
-     * Импортирует модули из другого пространства имён и внедряет зависимости.
-     *
-     * @param  {Namespace~importSettings} settings
-     *         Параметры импорта.
-     * @return  {Namespace}
-     *          this.
-     */
-    Namespace.prototype.import = function(settings) {
-        importModules(this, settings);
-        importDependencies(this, settings);
-        return this;
-    };
-
-    /**
-     * Инициализирует объявленные модули приложения. Порядок инициализации
-     * определяется зависимостями. Если модули не зависят друг от друга, то
-     * их порядок инициализации не оговаривается.
-     */
-    Namespace.prototype.init = function() {
+    Gumup.prototype.init = function() {
         var cache = {
             inited: {},
             resolved: {},
@@ -143,17 +105,17 @@
     };
 
     /**
-     * Объявляет модуль в пространстве имён. Конструктор модуля будет вызван в
-     * контексте уже сущетсвующего объекта в пространстве имён.
+     * Create a module declaration with initializer as implementation function.
+     * It'll be called in context of existing object.
      *
      * @param  {string} name
-     *         Имя модуля.
-     * @param  {Declaration~callback} implementation
-     *         Конструктор модуля.
+     *         Module name.
+     * @param  {Gumup~implementation} implementation
+     *         Initialization function.
      * @return  {Declaration}
-     *          Объявление модуля.
+     *          Module declaration.
      */
-    Namespace.prototype.module = function(name, implementation) {
+    Gumup.prototype.module = function(name, implementation) {
         if (!checkModuleName(name)) {
             throw error("Invalid module name '" + name + "'");
         }
@@ -170,20 +132,58 @@
     };
 
     /**
-     * Объявляет модуль в пространстве имён. Фабрика модуля должна вернуть
-     * объект, который затем будет размещён в пространстве имён.
+     * Create a module declaration with factory as implementation function.
+     * It must return ready-to-use module object.
      *
      * @param  {string} name
-     *         Имя модуля.
-     * @param  {Declaration~callback} implementation
-     *         Фабрика модуля.
+     *         Module name.
+     * @param  {Gumup~implementation} implementation
+     *         Factory function.
      * @return  {Declaration}
-     *          Модуль приложения.
+     *          Module declaration.
      */
-    Namespace.prototype.object = function(name, implementation) {
+    Gumup.prototype.object = function(name, implementation) {
         var decl = this.module(name, implementation);
         decl._isObject = true;
         return decl;
+    };
+
+    /**
+     * Dependency injections settings.
+     *
+     * @namespace  Gumup~pickDependency
+     * @property  {string} module
+     *            Module name that'll be assigned to injected object.
+     * @property  {*} implementation
+     *            Any object that'll be injected. If it is string, then object
+     *            will be picked from the picked namespace.
+     */
+
+    /**
+     * Pick settings.
+     *
+     * @namespace  Gumup~pickSettings
+     * @property  {Gumup} [namespace]
+     *            Picked namespace.
+     * @property  {string[]} [modules]
+     *            Module names to be picked. {@link Declaration#require}
+     * @property  {Gumup~pickDependency[]} [dependecies]
+     *            Dependencies to be injected.
+     */
+
+    /**
+     * Copy module declarations from the another Gumup namespace with theirs
+     * dependencies.
+     *
+     * @param  {Gumup~pickSettings} settings
+     *         Pick settings.
+     * @return  {Gumup}
+     *          Itself.
+     */
+    Gumup.prototype.pick = function(settings) {
+        pickModules(this, settings);
+        pickDependencies(this, settings);
+        return this;
     };
 
     function checkModuleName(name) {
@@ -196,7 +196,7 @@
 
     function error(msg) {
         var err = new Error(msg);
-        err.name = "NamespaceError";
+        err.name = "GumupError";
         return err;
     }
 
@@ -257,27 +257,27 @@
         }
     }
 
-    function importDependencies(namespace, settings) {
+    function pickDependencies(dest, settings) {
         var dependencies = (settings.dependencies == null
                 ? [] : settings.dependencies);
         if (Object.prototype.toString.call(dependencies) !== "[object Array]") {
-            throw error("Invalid dependencies array in import settings");
+            throw error("Invalid dependencies array in pick settings");
         }
         var srcDecls = null,
-            destDecls = namespace._declarations,
+            destDecls = dest._declarations,
             len = dependencies.length;
         for (var i = 0; i < len; i++) {
             var dependency = dependencies[i];
             if (typeof dependency === "object") {
                 if (!checkModuleName(dependency.name)) {
                     throw error("Invalid dependency name '"
-                            + dependency.name + "' in import settings");
+                            + dependency.name + "' in pick settings");
                 }
                 var destName = dependency.name;
                 if (typeof dependency.implementation === "string") {
                     if (srcDecls == null) {
-                        if (!(settings.namespace instanceof Namespace)) {
-                            throw error("Invalid namespace in import settings");
+                        if (!(settings.namespace instanceof Gumup)) {
+                            throw error("Invalid namespace in pick settings");
                         }
                         srcDecls = settings.namespace._declarations;
                     }
@@ -291,7 +291,7 @@
                     }
                     destDecls[destName] = srcDecls[srcName];
                 } else {
-                    var decl = new namespace.Declaration((function(obj) {
+                    var decl = new dest.Declaration((function(obj) {
                         return function() {
                             return obj;
                         };
@@ -300,14 +300,14 @@
                     destDecls[destName] = decl;
                 }
             } else {
-                throw error("Invalid dependencies in import settings");
+                throw error("Invalid dependencies in pick settings");
             }
         }
     }
 
-    function importModule(srcDecls, destDecls, name, imported, stack) {
+    function pickModule(srcDecls, destDecls, name, picked, stack) {
         forEach(srcDecls, name, function(depName) {
-            if (imported[depName] !== true) {
+            if (picked[depName] !== true) {
                 if (stack[depName] === true) {
                     throw error("Recursive dependency '" + depName + "'");
                 }
@@ -316,57 +316,57 @@
                 var len = decl._dependencies.length;
                 for (var i = 0; i < len; i++) {
                     var reqName = decl._dependencies[i];
-                    importModule(srcDecls, destDecls, reqName, imported, stack);
+                    pickModule(srcDecls, destDecls, reqName, picked, stack);
                 }
                 destDecls[depName] = decl;
-                imported[depName] = true;
+                picked[depName] = true;
             }
         });
     }
 
-    function importModules(namespace, settings) {
+    function pickModules(dest, settings) {
         var modules = (settings.modules == null ? [] : settings.modules);
         if (Object.prototype.toString.call(modules) !== "[object Array]") {
-            throw error("Invalid modules array in import settings");
+            throw error("Invalid modules array in pick settings");
         }
         var len = modules.length;
         if (len > 0) {
-            if (!(settings.namespace instanceof Namespace)) {
-                throw error("Invalid namespace in import settings");
+            if (!(settings.namespace instanceof Gumup)) {
+                throw error("Invalid namespace in pick settings");
             }
-            var imported = {},
+            var picked = {},
                 srcDecls = settings.namespace._declarations,
-                destDecls = namespace._declarations;
+                destDecls = dest._declarations;
             for (var i = 0; i < len; i++) {
                 var name = modules[i];
                 if (!checkRequireName(name)) {
                     throw error("Invalid module name '"+ name
-                            + "' in import settings");
+                            + "' in pick settings");
                 }
-                importModule(srcDecls, destDecls, name, imported, {});
+                pickModule(srcDecls, destDecls, name, picked, {});
             }
         }
     }
 
     function inited() {
-        throw error("Namespace has already been inited");
+        throw error("Gumup namespace has already been inited");
     }
 
-    function initialize(namespace, declarations, name, cache) {
+    function initialize(dest, declarations, name, cache) {
         var decl = declarations[name];
         if (cache.inited[name] !== true) {
             var len = decl._dependenciesUncapped.length;
             for (var i = 0; i < len; i++) {
-                initialize(namespace, declarations,
+                initialize(dest, declarations,
                         decl._dependenciesUncapped[i], cache);
             }
             var module;
             if (decl._isObject === true) {
-                module = decl._implementation(namespace.modules);
-                extend(namespace.modules, name, module);
+                module = decl._implementation(dest.modules);
+                extend(dest.modules, name, module);
             } else {
-                module = extend(namespace.modules, name);
-                decl._implementation.call(module, namespace.modules);
+                module = extend(dest.modules, name);
+                decl._implementation.call(module, dest.modules);
             }
             cache.inited[name] = true;
         }
@@ -395,6 +395,6 @@
         }
     }
 
-    this.namespace = new Namespace();
+    this.gumup = new Gumup();
 
 }).call(this);

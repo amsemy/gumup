@@ -1,13 +1,13 @@
 {
-    "name": "namespace",
-    "version": "1.0.0",
+    "name": "gumup",
+    "version": "0.1.0",
     "description": "Simple dynamic JS modules",
     "author": "Amsemy",
-    "main": "./dist/namespace.js",
+    "main": "./dist/gumup.js",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/amsemy/namespace.git"
+        "url": "https://github.com/amsemy/gumup.git"
     },
     "devDependencies": {
         "grunt": "~0.4.1",

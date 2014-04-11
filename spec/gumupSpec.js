@@ -1,8 +1,8 @@
-(function(namespace) {
+(function(gumup) {
 
     'use strict';
 
-    describe("namespace", function() {
+    describe("gumup", function() {
 
         var validNames = [
             "a",
@@ -95,19 +95,15 @@
             };
         }
 
-        it("must be an object", function() {
-            expect(typeof namespace).toBe("object");
-        });
-
-        describe("namespace.import", function() {
+        describe("gumup.pick", function() {
 
             var ns, other;
 
             beforeEach(function() {
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
             });
 
-            it("must import modules", function() {
+            it("must copy module declarations from the another namespace", function() {
                 ns.module('aaa', moduleName("AAA"));
                 ns.module('bbb', moduleName("BBB"));
                 ns.object('bbb.Ddd', objectName("BBB.DDD"));
@@ -116,9 +112,9 @@
                 ns.object('Ccc', objectName("CCC"));
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     modules: []
                 });
                 other.init();
@@ -126,9 +122,9 @@
                 expect(other.modules).toEqual({});
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['aaa', 'bbb']
                 });
@@ -141,9 +137,9 @@
                 expect(other.modules.Ccc).toBeUndefined();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['aaa', 'bbb.*']
                 });
@@ -157,9 +153,9 @@
                 expect(other.modules.Ccc).toBeUndefined();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['aaa', 'Ccc']
                 });
@@ -170,9 +166,9 @@
                 expect(other.modules.Ccc.name).toBe("CCC");
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['*']
                 });
@@ -186,7 +182,7 @@
                 expect(other.modules.Ccc.name).toBe("CCC");
             });
 
-            it("must import required modules", function() {
+            it("must copy dependencies from the another namespace", function() {
                 ns.module('aaa', moduleName("AAA"));
                 ns.object('Bbb', objectName("BBB"))
                     .require('aaa');
@@ -200,9 +196,9 @@
                     .require('eee.fff');
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['ccc']
                 });
@@ -216,9 +212,9 @@
                 expect(other.modules.hhh).toBeUndefined();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['Ddd']
                 });
@@ -232,9 +228,9 @@
                 expect(other.modules.hhh).toBeUndefined();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['eee.fff']
                 });
@@ -249,9 +245,9 @@
                 expect(other.modules.hhh).toBeUndefined();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     modules: ['hhh']
                 });
@@ -266,30 +262,30 @@
                 expect(other.modules.hhh.name).toBe("HHH");
             });
 
-            it("must inject dependencies", function() {
+            it("must inject the dependencies", function() {
                 ns.module('aaa', moduleName("AAA"));
                 ns.object('Bbb', objectName("BBB"));
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({});
+                other.pick({});
                 other.init();
 
                 expect(other.modules).toEqual({});
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     dependencies: []
                 });
                 other.init();
 
                 expect(other.modules).toEqual({});
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     namespace: ns,
                     dependencies: [
                         {
@@ -308,9 +304,9 @@
                 expect(other.modules.test.Bbb.name).toBe("BBB");
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
-                other.import({
+                other.pick({
                     dependencies: [
                         {
                             name: "ccc",
@@ -330,43 +326,43 @@
                 expect(other.modules.ddd).toBe(123);
             });
 
-            it("must accept a valid module names", function() {
+            it("must accept valid module names", function() {
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     ns.module(name, function() {});
                 }
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 expect(function() {
-                    other.import({
+                    other.pick({
                         modules: 123
                     });
                 }).toThrow();
                 expect(function() {
-                    other.import({
+                    other.pick({
                         modules: "aaa"
                     });
                 }).toThrow();
                 expect(function() {
-                    other.import({
+                    other.pick({
                         modules: {}
                     });
                 }).toThrow();
                 expect(function() {
-                    other.import({
+                    other.pick({
                         modules: function() {}
                     });
                 }).toThrow();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             modules: [name]
                         });
@@ -375,7 +371,7 @@
                 for (var i = 0, len = requiredNames.length; i < len; i++) {
                     var name = requiredNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             modules: [name]
                         });
@@ -384,7 +380,7 @@
                 for (var i = 0, len = invalidNames.length; i < len; i++) {
                     var name = invalidNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             modules: [name]
                         });
@@ -393,7 +389,7 @@
                 for (var i = 0, len = objectNames.length; i < len; i++) {
                     var name = objectNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             modules: [name]
                         });
@@ -401,43 +397,43 @@
                 }
             });
 
-            it("must accept a valid dependency names", function() {
+            it("must accept valid dependency names", function() {
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     ns.module(name, function() {});
                 }
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 expect(function() {
-                    other.import({
+                    other.pick({
                         dependencies: 123
                     });
                 }).toThrow();
                 expect(function() {
-                    other.import({
+                    other.pick({
                         dependencies: "aaa"
                     });
                 }).toThrow();
                 expect(function() {
-                    other.import({
+                    other.pick({
                         dependencies: {}
                     });
                 }).toThrow();
                 expect(function() {
-                    other.import({
+                    other.pick({
                         dependencies: function() {}
                     });
                 }).toThrow();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             dependencies: [
                                 {
                                     name: name,
@@ -450,7 +446,7 @@
                 for (var i = 0, len = requiredNames.length; i < len; i++) {
                     var name = requiredNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             dependencies: [
                                 {
                                     name: name,
@@ -463,7 +459,7 @@
                 for (var i = 0, len = invalidNames.length; i < len; i++) {
                     var name = invalidNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             dependencies: [
                                 {
                                     name: name,
@@ -476,7 +472,7 @@
                 for (var i = 0, len = objectNames.length; i < len; i++) {
                     var name = objectNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             dependencies: [
                                 {
                                     name: name,
@@ -488,12 +484,12 @@
                 }
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             dependencies: [
                                 {
@@ -507,7 +503,7 @@
                 for (var i = 0, len = requiredNames.length; i < len; i++) {
                     var name = requiredNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             dependencies: [
                                 {
@@ -521,7 +517,7 @@
                 for (var i = 0, len = invalidNames.length; i < len; i++) {
                     var name = invalidNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             dependencies: [
                                 {
@@ -535,7 +531,7 @@
                 for (var i = 0, len = objectNames.length; i < len; i++) {
                     var name = objectNames[i];
                     expect(function() {
-                        other.import({
+                        other.pick({
                             namespace: ns,
                             dependencies: [
                                 {
@@ -552,31 +548,31 @@
                 ns.module('aaa', function() {});
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 expect(function() {
-                    other.import({
+                    other.pick({
                         namespace: ns,
                         modules: ['aaa', 'bbb']
                     });
                 }).toThrow();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 ns.module('bbb', function() {});
                 expect(function() {
-                    other.import({
+                    other.pick({
                         namespace: ns,
                         modules: ['aaa', 'bbb']
                     });
                 }).not.toThrow();
 
                 //------------------------------------------------------------
-                other = new namespace.constructor();
+                other = new gumup.constructor();
 
                 expect(function() {
-                    other.import({
+                    other.pick({
                         namespace: ns,
                         dependencies: [
                             {
@@ -588,10 +584,10 @@
                 }).toThrow();
             });
 
-            it("must return the namespace for which it is called", function() {
+            it("must return itself", function() {
                 ns.module('aaa', function() {});
-                other = new namespace.constructor();
-                var actual = other.import({
+                other = new gumup.constructor();
+                var actual = other.pick({
                     namespace: ns,
                     modules: ['aaa']
                 });
@@ -600,15 +596,15 @@
 
         });
 
-        describe("namespace.init", function() {
+        describe("gumup.init", function() {
 
             var ns;
 
             beforeEach(function() {
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
             });
 
-            it("must create a valid object in namespace", function() {
+            it("must create a valid object in the namespace", function() {
 
                 ns.module('aaa', moduleName("AAA"));
                 ns.module('bbb', moduleName("BBB"));
@@ -624,7 +620,7 @@
                 expect(ns.modules.bbb.ccc.name).toBe("BBB.CCC");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.object('Aaa', objectName("AAA"));
                 ns.object('Bbb', objectName("BBB"));
@@ -640,7 +636,7 @@
                 expect(ns.modules.eee).toBe(123);
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('aaa', moduleName("AAA"));
                 ns.object('aaa.Bbb', objectName("AAA.BBB"))
@@ -651,7 +647,7 @@
                 expect(ns.modules.aaa.Bbb.name).toBe("AAA.BBB");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.object('Aaa', objectName("AAA"));
                 ns.module('Aaa.bbb', moduleName("AAA.BBB"))
@@ -662,7 +658,7 @@
                 expect(ns.modules.Aaa.bbb.name).toBe("AAA.BBB");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('aaa', function() {
                     this.bbb = "AAA";
@@ -675,7 +671,7 @@
                 }).toThrow();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('aaa', function() {
                     this.Bbb = "AAA";
@@ -687,7 +683,7 @@
                 }).toThrow();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('aaa.bbb.ccc', moduleName("AAA.BBB.CCC"));
                 ns.module('aaa.bbb', moduleName("AAA.BBB"))
@@ -698,7 +694,7 @@
                 expect(ns.modules.aaa.bbb.name).toBe("AAA.BBB");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('aaa.Bbb.ccc', function() {});
                 ns.object('aaa.Bbb', objectName("AAA.BBB"))
@@ -708,7 +704,7 @@
                 }).toThrow();
             });
 
-            it("must inject a valid dependencies", function() {
+            it("must inject valid dependencies", function() {
                 ns.module('aaa',moduleName("AAA"));
                 ns.module('bbb', function(modules) {
                     expect(modules.aaa.name).toBe("AAA");
@@ -738,14 +734,14 @@
                 ns.init();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('bbb.ccc', moduleName("BBB.CCC"));
                 ns.object('bbb.Ddd', objectName("BBB.DDD"));
                 ns.module('aaa', function(modules) {
                     expect(modules.bbb.ccc.name).toBe("BBB.CCC");
                     expect(modules.bbb.Ddd.name).toBe("BBB.DDD");
-                    expect(modules.bbb.name).toBeUndefined;
+                    expect(modules.bbb.name).toBeUndefined();
                     this.name = "AAA";
                 }).require('bbb.*');
                 ns.module('bbb', function(modules) {
@@ -777,7 +773,7 @@
                 expect(ns.solution).toBe("ABCD");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 expect(ns.solution).toBeUndefined();
                 ns.module('c', init("C"))
@@ -791,7 +787,7 @@
                 expect(ns.solution).toBe("ABCD");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 expect(ns.solution).toBeUndefined();
                 ns.module('c', init("C"))
@@ -816,7 +812,7 @@
                 expect(ns.solution).toBe("Ab1b2___BCD");
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('a', function() {})
                     .require('d')
@@ -858,7 +854,7 @@
                 }).toThrow();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('a', function() {}).require('b');
                 ns.module('b', function() {}).require('c');
@@ -868,7 +864,7 @@
                 }).toThrow();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('a', function() {}).require('*');
                 ns.module('b', function() {}).require('*');
@@ -877,7 +873,7 @@
                 }).toThrow();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('a', function() {}).require('*');
                 ns.module('b', function() {}).require('c');
@@ -887,7 +883,7 @@
                 }).toThrow();
 
                 //------------------------------------------------------------
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
 
                 ns.module('a', function() {})
                     .require('d')
@@ -960,12 +956,12 @@
 
         });
 
-        describe("namespace.module", function() {
+        describe("gumup.module", function() {
 
             var ns;
 
             beforeEach(function() {
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
             });
 
             it("must create a module", function() {
@@ -973,7 +969,7 @@
                 expect(typeof module.require).toBe("function");
             });
 
-            it("must accept a valid module names", function() {
+            it("must accept a valid module name", function() {
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     expect(function() {
@@ -1033,12 +1029,12 @@
 
         });
 
-        describe("namespace.object", function() {
+        describe("gumup.object", function() {
 
             var ns;
 
             beforeEach(function() {
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
             });
 
             it("must create a module of object", function() {
@@ -1053,10 +1049,10 @@
             var ns;
 
             beforeEach(function() {
-                ns = new namespace.constructor();
+                ns = new gumup.constructor();
             });
 
-            it("must accept a valid required module names", function() {
+            it("must accept a valid required module name", function() {
                 for (var i = 0, len = validNames.length; i < len; i++) {
                     var name = validNames[i];
                     expect(function() {
@@ -1083,7 +1079,7 @@
                 }
             });
 
-            it("must return the module for which it is called", function() {
+            it("must return itself", function() {
                 var module = ns.module('aaa', function() {});
                 var actual = module.require('bbb');
                 expect(actual).toBe(module);
@@ -1093,4 +1089,4 @@
 
     });
 
-})(namespace);
+})(gumup);
