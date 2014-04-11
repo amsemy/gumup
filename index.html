@@ -1,34 +1,38 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Namespace.js by amsemy</title>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Gumup : Simple dynamic JS modules" />
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <title>Gumup</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>Namespace.js</h1>
-        <p>Simple dynamic JS modules</p>
-        <p class="view"><a href="https://github.com/amsemy/namespace">View the Project on GitHub <small>amsemy/namespace</small></a></p>
-        <ul>
-          <li><a href="https://github.com/amsemy/namespace/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/amsemy/namespace/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/amsemy/namespace">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <p>Namespace.js is simple JavaScript library that lets you organize your code with module-based approach.
-Some of the features you get with Namespace.js:</p>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/amsemy/gumup">View on GitHub</a>
+
+          <h1 id="project_title">Gumup</h1>
+          <h2 id="project_tagline">Simple dynamic JS modules</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/amsemy/gumup/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/amsemy/gumup/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>Gumup is simple JavaScript library that lets you organize your code with module-based approach.
+Some of the features you get with Gumup:</p>
 
 <ul>
 <li>module-based namespaces</li>
@@ -37,64 +41,61 @@ Some of the features you get with Namespace.js:</p>
 </ul><h2>
 <a name="basic-usage" class="anchor" href="#basic-usage"><span class="octicon octicon-link"></span></a>Basic usage</h2>
 
-<p>Include Namespace.js in your page. The library unconditionally occupies a <code>namespace</code> global.</p>
+<p>Include Gumup in your page. The library unconditionally occupies a <code>gumup</code> global.</p>
 
-<div class="highlight highlight-html"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"namespace.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight highlight-html"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"gumup.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
-<p>Declare your moudles using <code>namespace.module</code>. Module implementation function will called in context of created module instance.</p>
+<p>Declare your moudles using <code>gumup.module</code>. Module implementation function will called in context of created module instance.</p>
 
-<div class="highlight highlight-javascript"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">ns</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="nx">gumup</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'utils.log'</span><span class="p">,</span> <span class="nx">implementation</span><span class="p">);</span>
 
-    <span class="nx">ns</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'utils.log'</span><span class="p">,</span> <span class="nx">implementation</span><span class="p">);</span>
+<span class="kd">function</span> <span class="nx">implementation</span><span class="p">()</span> <span class="p">{</span>
 
-    <span class="kd">function</span> <span class="nx">implementation</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">info</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">).</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">"info"</span><span class="p">;</span>
+    <span class="p">};</span>
 
-        <span class="k">this</span><span class="p">.</span><span class="nx">info</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">).</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">"info"</span><span class="p">;</span>
-        <span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">debug</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">).</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">"debug"</span><span class="p">;</span>
+    <span class="p">};</span>
 
-        <span class="k">this</span><span class="p">.</span><span class="nx">debug</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">).</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">"debug"</span><span class="p">;</span>
-        <span class="p">};</span>
-
-        <span class="kd">function</span> <span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">"p"</span><span class="p">);</span>
-            <span class="nx">p</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">;</span>
-            <span class="k">return</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-        <span class="p">}</span>
-
+    <span class="kd">function</span> <span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">"p"</span><span class="p">);</span>
+        <span class="nx">p</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
     <span class="p">}</span>
 
-<span class="p">})(</span><span class="nx">namespace</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>Use <code>require</code> method of module to specify its dependencies.</p>
 
-<div class="highlight highlight-javascript"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">ns</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">module</span> <span class="o">=</span> <span class="nx">gumup</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'main'</span><span class="p">,</span> <span class="nx">implementation</span><span class="p">);</span>
 
-    <span class="kd">var</span> <span class="nx">module</span> <span class="o">=</span> <span class="nx">ns</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'main'</span><span class="p">,</span> <span class="nx">implementation</span><span class="p">);</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">require</span><span class="p">(</span><span class="s1">'utils.log'</span><span class="p">);</span>
 
-    <span class="nx">module</span><span class="p">.</span><span class="nx">require</span><span class="p">(</span><span class="s1">'utils.log'</span><span class="p">);</span>
+<span class="kd">function</span> <span class="nx">implementation</span><span class="p">(</span><span class="nx">modules</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">log</span> <span class="o">=</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">log</span><span class="p">;</span>
 
-    <span class="kd">function</span> <span class="nx">implementation</span><span class="p">(</span><span class="nx">modules</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">log</span> <span class="o">=</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">log</span><span class="p">;</span>
-
-        <span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Init main"</span><span class="p">);</span>
-        <span class="nx">log</span><span class="p">.</span><span class="nx">debug</span><span class="p">(</span><span class="s2">"Debug message"</span><span class="p">);</span>
-    <span class="p">}</span>
-
-<span class="p">})(</span><span class="nx">namespace</span><span class="p">);</span>
+    <span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Init main"</span><span class="p">);</span>
+    <span class="nx">log</span><span class="p">.</span><span class="nx">debug</span><span class="p">(</span><span class="s2">"Debug message"</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
-<p>Hook <code>namespace.init()</code> to the page load event. (<a href="http://jsfiddle.net/amsemy/pq3uj/">jsfiddle</a>)</p>
+<p>Hook <code>gumup.init()</code> to the page load event. (<a href="http://jsfiddle.net/amsemy/pq3uj/">jsfiddle</a>)</p>
       </section>
     </div>
-    <footer>
-      <p>Project maintained by <a href="https://github.com/amsemy">amsemy</a></p>
-      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
-    </footer>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Gumup maintained by <a href="https://github.com/amsemy">amsemy</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
     
+
   </body>
 </html>
