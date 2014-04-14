@@ -1,12 +1,12 @@
 (function() {
 
     /*
-     *  moduleName
+     *  unitName
      *      :   IDENTIFIER ( '.' IDENTIFIER )*
      *      ;
      *
      *  requireName
-     *      :   moduleName ('.' '*')?
+     *      :   unitName ('.' '*')?
      *      |   '*'
      *      ;
      *
@@ -18,7 +18,8 @@
         requireNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*(?:\.\*)?|\*)$/;
 
     /**
-     * Create a dynamic namespace.
+     * Create a Gumup namespace. The namespace consist of units which can be
+     * modules, objects or constructors.
      *
      * @constructor
      */
@@ -43,7 +44,6 @@
          */
         var Declaration = this.Declaration = function(implementation) {
             this._dependencies = [];
-            this._dependenciesUncapped = null;
             this._implementation = implementation;
         };
 
@@ -55,10 +55,9 @@
          *         For example, the mask `foo.*` matches all the nested modules
          *         of `foo` module (except the `foo` module). If the module
          *         depends on all existing modules, the mask `*` can be used.
-         * @return  {Declaration}
+         * @return  {Gumup~Declaration}
          *          Itself.
          */
-        // Add a dependency to the module.
         Declaration.prototype.require = function(reqName) {
             if (!checkRequireName(reqName)) {
                 throw error("Invalid require name '" + reqName + "'");
@@ -85,21 +84,28 @@
      * order of modules depends on dependency resolution.
      */
     Gumup.prototype.init = function() {
-        var cache = {
-            inited: {},
-            resolved: {},
-            root: {}
-        };
         this.Declaration.prototype.require = inited;
         this.init = inited;
         this.module = inited;
-        for (var d in this._declarations) {
+        var cache = {
+            // Declaration dependencies with uncapped `*` mask
+            dependencies: {},
+            // Units that have already been initialized
+            inited: {},
+            // Units that have already been resolved
+            resolved: {},
+            // Independent units
+            root: {}
+        };
+        var d;
+        for (d in this._declarations) {
+            cache.dependencies[d] = [];
             cache.root[d] = true;
         }
-        for (var d in this._declarations) {
+        for (d in this._declarations) {
             resolve(this._declarations, d, cache, {});
         }
-        for (var d in cache.root) {
+        for (d in cache.root) {
             initialize(this, this._declarations, d, cache);
         }
     };
@@ -112,7 +118,7 @@
      *         Module name.
      * @param  {Gumup~implementation} implementation
      *         Initialization function.
-     * @return  {Declaration}
+     * @return  {Gumup~Declaration}
      *          Module declaration.
      */
     Gumup.prototype.module = function(name, implementation) {
@@ -122,13 +128,10 @@
         if (typeof implementation !== "function") {
             throw error("Invalid implementation of '" + name + "' module");
         }
-        if (this._declarations[name] == null) {
-            var decl = new this.Declaration(implementation);
-            this._declarations[name] = decl;
-            return decl;
-        } else {
+        if (this._declarations[name]) {
             throw error("Module '" + name + "' has already been declared");
         }
+        return this._declarations[name] = new this.Declaration(implementation);
     };
 
     /**
@@ -139,7 +142,7 @@
      *         Module name.
      * @param  {Gumup~implementation} implementation
      *         Factory function.
-     * @return  {Declaration}
+     * @return  {Gumup~Declaration}
      *          Module declaration.
      */
     Gumup.prototype.object = function(name, implementation) {
@@ -187,11 +190,11 @@
     };
 
     function checkModuleName(name) {
-        return (name != null && moduleNamePattern.test(name));
+        return (name && moduleNamePattern.test(name));
     }
 
     function checkRequireName(name) {
-        return (name != null && requireNamePattern.test(name));
+        return (name && requireNamePattern.test(name));
     }
 
     function error(msg) {
@@ -234,16 +237,18 @@
             }
             parent = parent[part];
         }
-    };
+    }
 
+    //
     function forEach(declarations, reqName, callback) {
+        var d;
         if (reqName === "*") {
-            for (var d in declarations) {
+            for (d in declarations) {
                 callback.call(this, d);
             }
         } else if (reqName.charAt(reqName.length - 1) === "*") {
             var baseName = reqName.substring(0, reqName.length - 1);
-            for (var d in declarations) {
+            for (d in declarations) {
                 if (d.indexOf(baseName) === 0) {
                     callback.call(this, d);
                 }
@@ -348,17 +353,19 @@
         }
     }
 
+    // Dummy to avoid namespace editing in its initialization
     function inited() {
-        throw error("Gumup namespace has already been inited");
+        throw error("Gumup namespace has already been initialized");
     }
 
+    // Create unit object in namespace
     function initialize(dest, declarations, name, cache) {
         var decl = declarations[name];
         if (cache.inited[name] !== true) {
-            var len = decl._dependenciesUncapped.length;
+            var len = cache.dependencies[name].length;
             for (var i = 0; i < len; i++) {
                 initialize(dest, declarations,
-                        decl._dependenciesUncapped[i], cache);
+                    cache.dependencies[name][i], cache);
             }
             var module;
             if (decl._isObject === true) {
@@ -372,6 +379,7 @@
         }
     }
 
+    // Check and prepare (uncap `*` mask) unit dependencies
     function resolve(declarations, name, cache, stack) {
         var decl = declarations[name];
         if (cache.resolved[name] !== true) {
@@ -379,14 +387,13 @@
                 throw error("Recursive dependency '" + name + "'");
             }
             stack[name] = true;
-            decl._dependenciesUncapped = [];
             var len = decl._dependencies.length;
             for (var i = 0; i < len; i++) {
                 var reqName = decl._dependencies[i];
                 forEach(declarations, reqName, function(depName) {
                     if (depName !== name) {
                         delete cache.root[depName];
-                        decl._dependenciesUncapped.push(depName);
+                        cache.dependencies[name].push(depName);
                         resolve(declarations, depName, cache, stack);
                     }
                 });

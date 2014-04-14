@@ -327,8 +327,10 @@
             });
 
             it("must accept valid module names", function() {
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                var i, len, name;
+
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     ns.module(name, function() {});
                 }
 
@@ -359,8 +361,8 @@
                 //------------------------------------------------------------
                 other = new gumup.constructor();
 
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -368,8 +370,8 @@
                         });
                     }).not.toThrow();
                 }
-                for (var i = 0, len = requiredNames.length; i < len; i++) {
-                    var name = requiredNames[i];
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -377,8 +379,8 @@
                         });
                     }).not.toThrow();
                 }
-                for (var i = 0, len = invalidNames.length; i < len; i++) {
-                    var name = invalidNames[i];
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -386,8 +388,8 @@
                         });
                     }).toThrow();
                 }
-                for (var i = 0, len = objectNames.length; i < len; i++) {
-                    var name = objectNames[i];
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -398,8 +400,10 @@
             });
 
             it("must accept valid dependency names", function() {
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                var i, len, name;
+
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     ns.module(name, function() {});
                 }
 
@@ -430,8 +434,8 @@
                 //------------------------------------------------------------
                 other = new gumup.constructor();
 
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     expect(function() {
                         other.pick({
                             dependencies: [
@@ -443,8 +447,8 @@
                         });
                     }).not.toThrow();
                 }
-                for (var i = 0, len = requiredNames.length; i < len; i++) {
-                    var name = requiredNames[i];
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
                     expect(function() {
                         other.pick({
                             dependencies: [
@@ -456,8 +460,8 @@
                         });
                     }).toThrow();
                 }
-                for (var i = 0, len = invalidNames.length; i < len; i++) {
-                    var name = invalidNames[i];
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
                     expect(function() {
                         other.pick({
                             dependencies: [
@@ -469,8 +473,8 @@
                         });
                     }).toThrow();
                 }
-                for (var i = 0, len = objectNames.length; i < len; i++) {
-                    var name = objectNames[i];
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
                     expect(function() {
                         other.pick({
                             dependencies: [
@@ -486,8 +490,8 @@
                 //------------------------------------------------------------
                 other = new gumup.constructor();
 
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -500,8 +504,8 @@
                         });
                     }).not.toThrow();
                 }
-                for (var i = 0, len = requiredNames.length; i < len; i++) {
-                    var name = requiredNames[i];
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -514,8 +518,8 @@
                         });
                     }).toThrow();
                 }
-                for (var i = 0, len = invalidNames.length; i < len; i++) {
-                    var name = invalidNames[i];
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -528,8 +532,8 @@
                         });
                     }).toThrow();
                 }
-                for (var i = 0, len = objectNames.length; i < len; i++) {
-                    var name = objectNames[i];
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
                     expect(function() {
                         other.pick({
                             namespace: ns,
@@ -777,7 +781,7 @@
 
                 expect(ns.solution).toBeUndefined();
                 ns.module('c', init("C"))
-                    .require('b');;
+                    .require('b');
                 ns.module('a', init("A"));
                 ns.module('d', init("D"))
                     .require('*');
@@ -970,26 +974,27 @@
             });
 
             it("must accept a valid module name", function() {
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                var i, len, name;
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     expect(function() {
                         ns.module(name, function() {});
                     }).not.toThrow();
                 }
-                for (var i = 0, len = requiredNames.length; i < len; i++) {
-                    var name = requiredNames[i];
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
                     expect(function() {
                         ns.module(name, function() {});
                     }).toThrow();
                 }
-                for (var i = 0, len = invalidNames.length; i < len; i++) {
-                    var name = invalidNames[i];
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
                     expect(function() {
                         ns.module(name, function() {});
                     }).toThrow();
                 }
-                for (var i = 0, len = objectNames.length; i < len; i++) {
-                    var name = objectNames[i];
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
                     expect(function() {
                         ns.module(name, function() {});
                     }).toThrow();
@@ -1053,26 +1058,27 @@
             });
 
             it("must accept a valid required module name", function() {
-                for (var i = 0, len = validNames.length; i < len; i++) {
-                    var name = validNames[i];
+                var i, len, name;
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
                     expect(function() {
                         ns.module("V" + i, function() {}).require(name);
                     }).not.toThrow();
                 }
-                for (var i = 0, len = requiredNames.length; i < len; i++) {
-                    var name = requiredNames[i];
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
                     expect(function() {
                         ns.module("R" + i, function() {}).require(name);
                     }).not.toThrow();
                 }
-                for (var i = 0, len = invalidNames.length; i < len; i++) {
-                    var name = invalidNames[i];
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
                     expect(function() {
                         ns.module("I" + i, function() {}).require(name);
                     }).toThrow();
                 }
-                for (var i = 0, len = objectNames.length; i < len; i++) {
-                    var name = objectNames[i];
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
                     expect(function() {
                         ns.module("O" + i, function() {}).require(name);
                     }).toThrow();
