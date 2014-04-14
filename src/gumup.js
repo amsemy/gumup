@@ -14,7 +14,7 @@
      *      :   ('A'..'Z' | 'a'..'z' | '_' | '$') ('A'..'Z' | 'a'..'z' | '0'..'9' | '_'  | '$')*
      *      ;
      */
-    var moduleNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*)$/,
+    var unitNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*)$/,
         requireNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*(?:\.\*)?|\*)$/;
 
     /**
@@ -26,21 +26,21 @@
     var Gumup = function() {
 
         /**
-         * Initialize the module.
+         * Initialize the unit.
          *
          * @callback  Gumup~implementation
-         * @param  {Gumup#modules} modules
-         *         Hash of initialized modules.
+         * @param  {Gumup#units} units
+         *         Hash of initialized units.
          * @returns  {object}
-         *           Initialized module.
+         *           Initialized unit.
          */
 
         /**
-         * Create a module declaration.
+         * Create a unit declaration.
          *
          * @constructor
          * @param  {Gumup~implementation} implementation
-         *         Function of module initialization.
+         *         Function of unit initialization.
          */
         var Declaration = this.Declaration = function(implementation) {
             this._dependencies = [];
@@ -48,13 +48,13 @@
         };
 
         /**
-         * Add dependency on the another module.
+         * Add dependency on the another unit.
          *
          * @param  {string} reqName
-         *         Dependent module name. It supports masks using `*` symbol.
-         *         For example, the mask `foo.*` matches all the nested modules
-         *         of `foo` module (except the `foo` module). If the module
-         *         depends on all existing modules, the mask `*` can be used.
+         *         Dependent unit name. It supports masks using `*` symbol.
+         *         For example, the mask `foo.*` matches all the nested units
+         *         of `foo` module (except the `foo` module). If the unit
+         *         depends on all existing units, the mask `*` can be used.
          * @return  {Gumup~Declaration}
          *          Itself.
          */
@@ -69,19 +69,19 @@
         this._declarations = {};
 
         /**
-         * Hash that contains the initialized modules.
+         * Hash that contains the initialized units.
          *
          * @namespace
          */
-        this.modules = {};
+        this.units = {};
 
     };
 
     Gumup.prototype.constructor = Gumup;
 
     /**
-     * Initialize the Gumup namespace with declared modules. Initialization
-     * order of modules depends on dependency resolution.
+     * Initialize the Gumup namespace with declared units. Initialization
+     * order of units depends on dependency resolution.
      */
     Gumup.prototype.init = function() {
         this.Declaration.prototype.require = inited;
@@ -111,39 +111,39 @@
     };
 
     /**
-     * Create a module declaration with initializer as implementation function.
+     * Create a unit declaration with initializer as implementation function.
      * It'll be called in context of existing object.
      *
      * @param  {string} name
-     *         Module name.
+     *         Unit name.
      * @param  {Gumup~implementation} implementation
      *         Initialization function.
      * @return  {Gumup~Declaration}
-     *          Module declaration.
+     *          Unit declaration.
      */
     Gumup.prototype.module = function(name, implementation) {
-        if (!checkModuleName(name)) {
-            throw error("Invalid module name '" + name + "'");
+        if (!checkUnitName(name)) {
+            throw error("Invalid unit name '" + name + "'");
         }
         if (typeof implementation !== "function") {
-            throw error("Invalid implementation of '" + name + "' module");
+            throw error("Invalid implementation of '" + name + "' unit");
         }
         if (this._declarations[name]) {
-            throw error("Module '" + name + "' has already been declared");
+            throw error("Unit '" + name + "' has already been declared");
         }
         return this._declarations[name] = new this.Declaration(implementation);
     };
 
     /**
-     * Create a module declaration with factory as implementation function.
-     * It must return ready-to-use module object.
+     * Create a unit declaration with factory as implementation function.
+     * It must return ready-to-use unit object.
      *
      * @param  {string} name
-     *         Module name.
+     *         Unit name.
      * @param  {Gumup~implementation} implementation
      *         Factory function.
      * @return  {Gumup~Declaration}
-     *          Module declaration.
+     *          Unit declaration.
      */
     Gumup.prototype.object = function(name, implementation) {
         var decl = this.module(name, implementation);
@@ -155,8 +155,8 @@
      * Dependency injections settings.
      *
      * @namespace  Gumup~pickDependency
-     * @property  {string} module
-     *            Module name that'll be assigned to injected object.
+     * @property  {string} unit
+     *            Unit name that'll be assigned to injected object.
      * @property  {*} implementation
      *            Any object that'll be injected. If it is string, then object
      *            will be picked from the picked namespace.
@@ -168,14 +168,14 @@
      * @namespace  Gumup~pickSettings
      * @property  {Gumup} [namespace]
      *            Picked namespace.
-     * @property  {string[]} [modules]
-     *            Module names to be picked. {@link Declaration#require}
+     * @property  {string[]} [units]
+     *            Unit names to be picked. {@link Declaration#require}
      * @property  {Gumup~pickDependency[]} [dependecies]
      *            Dependencies to be injected.
      */
 
     /**
-     * Copy module declarations from the another Gumup namespace with theirs
+     * Copy unit declarations from the another Gumup namespace with theirs
      * dependencies.
      *
      * @param  {Gumup~pickSettings} settings
@@ -184,17 +184,17 @@
      *          Itself.
      */
     Gumup.prototype.pick = function(settings) {
-        pickModules(this, settings);
+        pickUnits(this, settings);
         pickDependencies(this, settings);
         return this;
     };
 
-    function checkModuleName(name) {
-        return (name && moduleNamePattern.test(name));
-    }
-
     function checkRequireName(name) {
         return (name && requireNamePattern.test(name));
+    }
+
+    function checkUnitName(name) {
+        return (name && unitNamePattern.test(name));
     }
 
     function error(msg) {
@@ -203,6 +203,7 @@
         return err;
     }
 
+    // TODO
     function extend(parent, name, obj) {
         var parts = name.split(".");
         function getPath(len) {
@@ -222,14 +223,14 @@
                 } else {
                     if (obj != null
                             || typeof current !== "object") {
-                        throw error("Cann't init module '" + name
+                        throw error("Cann't init unit '" + name
                                 + "' because there is an object on this path");
                     }
                 }
                 return current;
             } else {
                 if (current != null && typeof current !== "object") {
-                    throw error("Cann't init module '" + name
+                    throw error("Cann't init unit '" + name
                             + "' because path element '" + getPath(i)
                             + "' isn't an object");
                 }
@@ -239,7 +240,7 @@
         }
     }
 
-    //
+    // TODO
     function forEach(declarations, reqName, callback) {
         var d;
         if (reqName === "*") {
@@ -262,6 +263,7 @@
         }
     }
 
+    // TODO: 3
     function pickDependencies(dest, settings) {
         var dependencies = (settings.dependencies == null
                 ? [] : settings.dependencies);
@@ -274,7 +276,7 @@
         for (var i = 0; i < len; i++) {
             var dependency = dependencies[i];
             if (typeof dependency === "object") {
-                if (!checkModuleName(dependency.name)) {
+                if (!checkUnitName(dependency.name)) {
                     throw error("Invalid dependency name '"
                             + dependency.name + "' in pick settings");
                 }
@@ -286,7 +288,7 @@
                         }
                         srcDecls = settings.namespace._declarations;
                     }
-                    if (!checkModuleName(dependency.implementation)) {
+                    if (!checkUnitName(dependency.implementation)) {
                         throw error("Invalid dependency implementation'"
                                 + dependency.implementation + "'");
                     }
@@ -310,7 +312,7 @@
         }
     }
 
-    function pickModule(srcDecls, destDecls, name, picked, stack) {
+    function pickUnit(srcDecls, destDecls, name, picked, stack) {
         forEach(srcDecls, name, function(depName) {
             if (picked[depName] !== true) {
                 if (stack[depName] === true) {
@@ -321,7 +323,7 @@
                 var len = decl._dependencies.length;
                 for (var i = 0; i < len; i++) {
                     var reqName = decl._dependencies[i];
-                    pickModule(srcDecls, destDecls, reqName, picked, stack);
+                    pickUnit(srcDecls, destDecls, reqName, picked, stack);
                 }
                 destDecls[depName] = decl;
                 picked[depName] = true;
@@ -329,12 +331,13 @@
         });
     }
 
-    function pickModules(dest, settings) {
-        var modules = (settings.modules == null ? [] : settings.modules);
-        if (Object.prototype.toString.call(modules) !== "[object Array]") {
-            throw error("Invalid modules array in pick settings");
+    // TODO: 1
+    function pickUnits(dest, settings) {
+        var units = (settings.units == null ? [] : settings.units);
+        if (Object.prototype.toString.call(units) !== "[object Array]") {
+            throw error("Invalid units array in pick settings");
         }
-        var len = modules.length;
+        var len = units.length;
         if (len > 0) {
             if (!(settings.namespace instanceof Gumup)) {
                 throw error("Invalid namespace in pick settings");
@@ -343,12 +346,12 @@
                 srcDecls = settings.namespace._declarations,
                 destDecls = dest._declarations;
             for (var i = 0; i < len; i++) {
-                var name = modules[i];
+                var name = units[i];
                 if (!checkRequireName(name)) {
-                    throw error("Invalid module name '"+ name
+                    throw error("Invalid unit name '"+ name
                             + "' in pick settings");
                 }
-                pickModule(srcDecls, destDecls, name, picked, {});
+                pickUnit(srcDecls, destDecls, name, picked, {});
             }
         }
     }
@@ -367,13 +370,13 @@
                 initialize(dest, declarations,
                     cache.dependencies[name][i], cache);
             }
-            var module;
+            var unit;
             if (decl._isObject === true) {
-                module = decl._implementation(dest.modules);
-                extend(dest.modules, name, module);
+                unit = decl._implementation(dest.units);
+                extend(dest.units, name, unit);
             } else {
-                module = extend(dest.modules, name);
-                decl._implementation.call(module, dest.modules);
+                unit = extend(dest.units, name);
+                decl._implementation.call(unit, dest.units);
             }
             cache.inited[name] = true;
         }
