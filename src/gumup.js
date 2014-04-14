@@ -125,7 +125,7 @@
         if (!checkUnitName(name)) {
             throw error("Invalid unit name '" + name + "'");
         }
-        if (typeof implementation !== "function") {
+        if (typeof implementation != "function") {
             throw error("Invalid implementation of '" + name + "' unit");
         }
         if (this._declarations[name]) {
@@ -147,7 +147,7 @@
      */
     Gumup.prototype.object = function(name, implementation) {
         var decl = this.module(name, implementation);
-        decl._isObject = true;
+        decl._type = "object";
         return decl;
     };
 
@@ -203,35 +203,29 @@
         return err;
     }
 
-    // TODO
+    // Places the unit object to the namespace
     function extend(parent, name, obj) {
         var parts = name.split(".");
-        function getPath(len) {
-            var path = "";
-            for (var i = 0; i < len; i++) {
-                path += parts[i] + (i + 1 < len ? "." : "");
-            }
-            return path;
-        }
+        var path = "";
         for (var i = 0, len = parts.length; i < len; i++) {
             var part = parts[i];
             var current = parent[part];
+            path += part + (i + 1 < len ? "." : "");
             if (i + 1 == len) {
                 if (current == null) {
                     current = (obj == null ? {} : obj);
                     parent[part] = current;
                 } else {
-                    if (obj != null
-                            || typeof current !== "object") {
+                    if (obj != null || typeof current != "object") {
                         throw error("Cann't init unit '" + name
                                 + "' because there is an object on this path");
                     }
                 }
                 return current;
             } else {
-                if (current != null && typeof current !== "object") {
+                if (current != null && typeof current != "object") {
                     throw error("Cann't init unit '" + name
-                            + "' because path element '" + getPath(i)
+                            + "' because path element '" + path
                             + "' isn't an object");
                 }
                 parent[part] = (current == null ? {} : current);
@@ -240,22 +234,26 @@
         }
     }
 
-    // TODO
+    // Iterate over declarations, executing a callback function for each matched
+    // dependency
     function forEach(declarations, reqName, callback) {
         var d;
-        if (reqName === "*") {
+        if (reqName == "*") {
+            // Iterate over all declarations
             for (d in declarations) {
                 callback.call(this, d);
             }
-        } else if (reqName.charAt(reqName.length - 1) === "*") {
+        } else if (reqName.charAt(reqName.length - 1) == "*") {
+            // Iterate over uncapped `*` declarations
             var baseName = reqName.substring(0, reqName.length - 1);
             for (d in declarations) {
-                if (d.indexOf(baseName) === 0) {
+                if (d.indexOf(baseName) == 0) {
                     callback.call(this, d);
                 }
             }
         } else {
-            if (declarations[reqName] != null) {
+            // A single dependency iteration
+            if (declarations[reqName]) {
                 callback.call(this, reqName);
             } else {
                 throw error("Invalid dependency '" + reqName + "'");
@@ -263,11 +261,14 @@
         }
     }
 
-    // TODO: 3
+    function isArray(obj) {
+        return Object.prototype.toString.call(obj) == "[object Array]";
+    }
+
+    // TODO: 1
     function pickDependencies(dest, settings) {
-        var dependencies = (settings.dependencies == null
-                ? [] : settings.dependencies);
-        if (Object.prototype.toString.call(dependencies) !== "[object Array]") {
+        var dependencies = settings.dependencies || [];
+        if (!isArray(dependencies)) {
             throw error("Invalid dependencies array in pick settings");
         }
         var srcDecls = null,
@@ -303,7 +304,7 @@
                             return obj;
                         };
                     })(dependency.implementation));
-                    decl._isObject = true;
+                    decl._type = "object";
                     destDecls[destName] = decl;
                 }
             } else {
@@ -333,8 +334,8 @@
 
     // TODO: 1
     function pickUnits(dest, settings) {
-        var units = (settings.units == null ? [] : settings.units);
-        if (Object.prototype.toString.call(units) !== "[object Array]") {
+        var units = settings.units || [];
+        if (!isArray(units)) {
             throw error("Invalid units array in pick settings");
         }
         var len = units.length;
@@ -364,14 +365,16 @@
     // Create unit object in namespace
     function initialize(dest, declarations, name, cache) {
         var decl = declarations[name];
-        if (cache.inited[name] !== true) {
+        if (!cache.inited[name]) {
+            // Create unit dependencies first
             var len = cache.dependencies[name].length;
             for (var i = 0; i < len; i++) {
                 initialize(dest, declarations,
                     cache.dependencies[name][i], cache);
             }
+            // Create unit object
             var unit;
-            if (decl._isObject === true) {
+            if (decl._type == "object") {
                 unit = decl._implementation(dest.units);
                 extend(dest.units, name, unit);
             } else {
@@ -385,7 +388,7 @@
     // Check and prepare (uncap `*` mask) unit dependencies
     function resolve(declarations, name, cache, stack) {
         var decl = declarations[name];
-        if (cache.resolved[name] !== true) {
+        if (!cache.resolved[name]) {
             if (stack[name] === true) {
                 throw error("Recursive dependency '" + name + "'");
             }
