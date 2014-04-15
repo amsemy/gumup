@@ -328,7 +328,7 @@
         for (var i = 0, len = parts.length; i < len; i++) {
             var part = parts[i];
             var current = units[part];
-            path += part + (i + 1 < len ? "." : "");
+            path += part;
             if (i + 1 == len) {
                 if (current == null) {
                     current = (obj == null ? {} : obj);
@@ -348,6 +348,7 @@
                 }
             }
             units = units[part];
+            path += ".";
         }
     }
 
