@@ -137,10 +137,8 @@
 
     Gumup.prototype.constructor = Gumup;
 
-// TODO
     /**
-     * Create a unit declaration with factory as implementation function.
-     * It must return ready-to-use unit object.
+     * Add the constructor declaration.
      *
      * @param  {string} name
      *         Unit name.
@@ -165,26 +163,24 @@
         var cache = {
             // Declaration dependencies with uncapped `*` mask
             dependencies: {},
-            //
-            root: {}
+            // Units without references
+            outer: {}
         };
         var d;
         for (d in this._declarations) {
             cache.dependencies[d] = [];
-            cache.root[d] = true;
+            cache.outer[d] = true;
         }
         for (d in this._declarations) {
             resolve(this._declarations, d, cache, {}, {});
         }
-        for (d in cache.root) {
+        for (d in cache.outer) {
             initialize(this, this._declarations, d, cache, {});
         }
     };
 
-// TODO
     /**
-     * Create a module declaration with initializer as implementation function.
-     * It'll be called in context of existing object.
+     * Add the module declaration.
      *
      * @param  {string} name
      *         Unit name.
@@ -198,10 +194,8 @@
         return this._declarations[name] = new this.ModuleDecl(implementation);
     };
 
-// TODO
     /**
-     * Create a unit declaration with factory as implementation function.
-     * It must return ready-to-use unit object.
+     * Add the object declaration.
      *
      * @param  {string} name
      *         Unit name.
@@ -423,8 +417,7 @@
     // Iterate over `settings.unit`, executing a `pickUnit` function for each
     // item
     function pickUnits(dest, settings) {
-        var picked = {},
-            units = settings.units || [];
+        var units = settings.units || [];
         if (!isArray(units)) {
             throw error("Invalid units array in pick settings");
         }
@@ -434,7 +427,8 @@
             if (!(settings.namespace instanceof Gumup)) {
                 throw error("Invalid namespace in pick settings");
             }
-            var srcDecls = settings.namespace._declarations;
+            var picked = {},
+                srcDecls = settings.namespace._declarations;
             for (var i = 0; i < len; i++) {
                 var reqName = units[i];
                 if (!checkRequireName(reqName)) {
@@ -484,7 +478,7 @@
                 var reqName = decl._dependencies[i];
                 forEach(declarations, reqName, function(depName) {
                     if (depName != name) {
-                        delete cache.root[depName];
+                        delete cache.outer[depName];
                         cache.dependencies[name].push(depName);
                         resolve(declarations, depName, cache, resolved, stack);
                     }
