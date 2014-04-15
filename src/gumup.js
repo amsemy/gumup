@@ -157,25 +157,25 @@
      * order of units depends on dependency resolution.
      */
     Gumup.prototype.init = function() {
-        this.Declaration.prototype.require = inited;
-        this.init = inited;
-        this.module = inited;
+        this.Declaration.prototype.require = initialized;
+        this.init = initialized;
+        this.module = initialized;
         var cache = {
             // Declaration dependencies with uncapped `*` mask
             dependencies: {},
             // Units without references
             outer: {}
         };
-        var d;
+        var d, resolved = {}, inited = {};
         for (d in this._declarations) {
             cache.dependencies[d] = [];
             cache.outer[d] = true;
         }
         for (d in this._declarations) {
-            resolve(this._declarations, d, cache, {}, {});
+            resolve(this._declarations, d, cache, resolved, {});
         }
         for (d in cache.outer) {
-            initialize(this, this._declarations, d, cache, {});
+            initialize(this, this._declarations, d, cache, inited);
         }
     };
 
@@ -446,7 +446,7 @@
     // --------------
 
     // Dummy to avoid namespace editing in its initialization
-    function inited() {
+    function initialized() {
         throw error("Gumup namespace has already been initialized");
     }
 
