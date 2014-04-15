@@ -37,7 +37,7 @@ module.exports = function(grunt) {
 
         jasmine: {
             all: {
-                src: 'dist/gumup.js',
+                src: 'src/gumup.js',
                 options: {
                     specs: 'spec/gumupSpec.js'
                 }

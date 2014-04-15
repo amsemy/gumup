@@ -26,13 +26,15 @@
     var Gumup = function() {
 
         /**
-         * Initialize the unit.
+         * Initialize the unit. When it's called the context will be set to a
+         * auto-created unit object. If it return a value, the value will be
+         * used as the unit object (except module units).
          *
          * @callback  Gumup~implementation
          * @param  {Gumup#units} units
-         *         Hash of initialized units.
+         *         The hash of initialized units.
          * @returns  {object}
-         *           Initialized unit.
+         *           The initialized unit object.
          */
 
         /**
@@ -40,7 +42,7 @@
          *
          * @constructor
          * @param  {Gumup~implementation} implementation
-         *         Function of unit initialization.
+         *         The function of unit initialization.
          */
         var Declaration = this.Declaration = function(implementation) {
             this._dependencies = [];
@@ -48,10 +50,10 @@
         };
 
         /**
-         * Add dependency on the another unit.
+         * Add a dependency on another unit.
          *
          * @param  {string} reqName
-         *         Dependent unit name. It supports masks using `*` symbol.
+         *         A dependent unit name. It supports masks using `*` symbol.
          *         For example, the mask `foo.*` matches all the nested units
          *         of `foo` module (except the `foo` module). If the unit
          *         depends on all existing units, the mask `*` can be used.
@@ -66,23 +68,69 @@
             return this;
         };
 
-        var ModuleDeclaration = function(implementation) {
+        /**
+         * Create a module declaration.
+         *
+         * @constructor
+         * @param  {Gumup~implementation} implementation
+         *         The function of unit initialization.
+         */
+        var ModuleDecl = this.ModuleDecl = function(implementation) {
             Declaration.call(this, implementation);
         };
 
-        var ObjectDeclaration = function(implementation) {
-            Declaration.call(this, implementation);
+        extend(ModuleDecl, Declaration);
 
+        // Initialize a module unit
+        ModuleDecl.prototype._init = function(dest, name) {
+            var obj = putUnitObject(dest.units, name);
+            this._implementation.call(obj, dest.units);
         };
 
-        var ConstrDeclaration = function(implementation) {
+        /**
+         * Create an object declaration.
+         *
+         * @constructor
+         * @param  {Gumup~implementation} implementation
+         *         The function of unit initialization.
+         */
+        var ObjectDecl = this.ObjectDecl = function(implementation) {
             Declaration.call(this, implementation);
+        };
+
+        extend(ObjectDecl, Declaration);
+
+        // Initialize an object unit
+        ObjectDecl.prototype._init = function(dest, name) {
+            var obj = {};
+            var impl = this._implementation.call(obj, dest.units);
+            putUnitObject(dest.units, name, (impl == null ? obj : impl));
+        };
+
+        /**
+         * Create a constructor declaration.
+         *
+         * @constructor
+         * @param  {Gumup~implementation} implementation
+         *         The function of unit initialization.
+         */
+        var ConstrDecl = this.ConstrDecl = function(implementation) {
+            Declaration.call(this, implementation);
+        };
+
+        extend(ConstrDecl, Declaration);
+
+        // Initialize a constructor unit
+        ConstrDecl.prototype._init = function(dest, name) {
+            var obj = function() {};
+            var impl = this._implementation.call(obj, dest.units);
+            putUnitObject(dest.units, name, (impl == null ? obj : impl));
         };
 
         this._declarations = {};
 
         /**
-         * Hash that contains the initialized units.
+         * The hash that contains the initialized unit objects.
          *
          * @namespace
          */
@@ -92,8 +140,25 @@
 
     Gumup.prototype.constructor = Gumup;
 
+// TODO
     /**
-     * Initialize the Gumup namespace with declared units. Initialization
+     * Create a unit declaration with factory as implementation function.
+     * It must return ready-to-use unit object.
+     *
+     * @param  {string} name
+     *         Unit name.
+     * @param  {Gumup~implementation} implementation
+     *         Factory function.
+     * @return  {Gumup~Declaration}
+     *          Unit declaration.
+     */
+    Gumup.prototype.constr = function(name, implementation) {
+        checkDeclaration(this, name, implementation);
+        return this._declarations[name] = new this.ConstrDecl(implementation);
+    };
+
+    /**
+     * Initialize the Gumup namespace with the declared units. Initialization
      * order of units depends on dependency resolution.
      */
     Gumup.prototype.init = function() {
@@ -123,8 +188,9 @@
         }
     };
 
+// TODO
     /**
-     * Create a unit declaration with initializer as implementation function.
+     * Create a module declaration with initializer as implementation function.
      * It'll be called in context of existing object.
      *
      * @param  {string} name
@@ -136,9 +202,10 @@
      */
     Gumup.prototype.module = function(name, implementation) {
         checkDeclaration(this, name, implementation);
-        return this._declarations[name] = new this.Declaration(implementation);
+        return this._declarations[name] = new this.ModuleDecl(implementation);
     };
 
+// TODO
     /**
      * Create a unit declaration with factory as implementation function.
      * It must return ready-to-use unit object.
@@ -152,9 +219,7 @@
      */
     Gumup.prototype.object = function(name, implementation) {
         checkDeclaration(this, name, implementation);
-        var decl = this._declarations[name] = new this.Declaration(implementation);
-        decl._type = "object";
-        return decl;
+        return this._declarations[name] = new this.ObjectDecl(implementation);
     };
 
     /**
@@ -195,6 +260,9 @@
         return this;
     };
 
+    // Helpers
+    // -------
+
     function checkDeclaration(dest, name, implementation) {
         if (!checkUnitName(name)) {
             throw error("Invalid unit name '" + name + "'");
@@ -221,35 +289,12 @@
         return err;
     }
 
-    // Places the unit object to the namespace
-    function extend(parent, name, obj) {
-        var parts = name.split(".");
-        var path = "";
-        for (var i = 0, len = parts.length; i < len; i++) {
-            var part = parts[i];
-            var current = parent[part];
-            path += part + (i + 1 < len ? "." : "");
-            if (i + 1 == len) {
-                if (current == null) {
-                    current = (obj == null ? {} : obj);
-                    parent[part] = current;
-                } else {
-                    if (obj != null || typeof current != "object") {
-                        throw error("Cann't init unit '" + name
-                                + "' because there is an object on this path");
-                    }
-                }
-                return current;
-            } else {
-                if (current != null && typeof current != "object") {
-                    throw error("Cann't init unit '" + name
-                            + "' because path element '" + path
-                            + "' isn't an object");
-                }
-                parent[part] = (current == null ? {} : current);
-            }
-            parent = parent[part];
-        }
+    function extend(Child, Parent) {
+        var F = function() {
+            this.constructor = Child;
+        };
+        F.prototype = Parent.prototype;
+        Child.prototype = new F();
     }
 
     // Iterate over declarations, executing a callback function for each matched
@@ -283,7 +328,40 @@
         return Object.prototype.toString.call(obj) == "[object Array]";
     }
 
-    // TODO: 1
+    // Places the unit object to the namespace
+    function putUnitObject(units, name, obj) {
+        var parts = name.split(".");
+        var path = "";
+        for (var i = 0, len = parts.length; i < len; i++) {
+            var part = parts[i];
+            var current = units[part];
+            path += part + (i + 1 < len ? "." : "");
+            if (i + 1 == len) {
+                if (current == null) {
+                    current = (obj == null ? {} : obj);
+                    units[part] = current;
+                } else if (obj != null || typeof current != "object") {
+                    throw error("Cann't init unit '" + name
+                            + "' because there is an object on this path");
+                }
+                return current;
+            } else {
+                if (current == null) {
+                    units[part] = {};
+                } else if (typeof current != "object") {
+                    throw error("Cann't init unit '" + name
+                        + "' because path element '" + path
+                        + "' isn't an object");
+                }
+            }
+            units = units[part];
+        }
+    }
+
+    // Pick dependencies
+    // -----------------
+
+    // Iterate over `settings.dependencies`, injecting each dependency
     function pickDependencies(dest, settings) {
         var dependencies = settings.dependencies || [];
         if (!isArray(dependencies)) {
@@ -317,14 +395,12 @@
                 }
                 destDecls[destName] = srcDecls[srcName];
             } else {
-                // Inject object as an object declaration
-                var decl = new dest.Declaration((function(obj) {
+                // Inject object as new object declaration
+                destDecls[destName] = new dest.ObjectDecl((function(obj) {
                     return function() {
                         return obj;
                     };
                 })(dependency.implementation));
-                decl._type = "object";
-                destDecls[destName] = decl;
             }
         }
     }
@@ -371,6 +447,9 @@
         }
     }
 
+    // Initialization
+    // --------------
+
     // Dummy to avoid namespace editing in its initialization
     function inited() {
         throw error("Gumup namespace has already been initialized");
@@ -387,14 +466,7 @@
                     cache.dependencies[name][i], cache);
             }
             // Create unit object
-            var unit;
-            if (decl._type == "object") {
-                unit = decl._implementation(dest.units);
-                extend(dest.units, name, unit);
-            } else {
-                unit = extend(dest.units, name);
-                decl._implementation.call(unit, dest.units);
-            }
+            decl._init(dest, name);
             cache.inited[name] = true;
         }
     }
