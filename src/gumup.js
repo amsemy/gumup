@@ -81,7 +81,6 @@
 
         extend(ModuleDecl, Declaration);
 
-        // Initialize a module unit
         ModuleDecl.prototype._init = function(dest, name) {
             var obj = putUnitObject(dest.units, name);
             this._implementation.call(obj, dest.units);
@@ -100,7 +99,6 @@
 
         extend(ObjectDecl, Declaration);
 
-        // Initialize an object unit
         ObjectDecl.prototype._init = function(dest, name) {
             var obj = {};
             var impl = this._implementation.call(obj, dest.units);
@@ -120,7 +118,6 @@
 
         extend(ConstrDecl, Declaration);
 
-        // Initialize a constructor unit
         ConstrDecl.prototype._init = function(dest, name) {
             var obj = function() {};
             var impl = this._implementation.call(obj, dest.units);
@@ -168,11 +165,7 @@
         var cache = {
             // Declaration dependencies with uncapped `*` mask
             dependencies: {},
-            // Units that have already been initialized
-            inited: {},
-            // Units that have already been resolved
-            resolved: {},
-            // Independent units
+            //
             root: {}
         };
         var d;
@@ -181,10 +174,10 @@
             cache.root[d] = true;
         }
         for (d in this._declarations) {
-            resolve(this._declarations, d, cache, {});
+            resolve(this._declarations, d, cache, {}, {});
         }
         for (d in cache.root) {
-            initialize(this, this._declarations, d, cache);
+            initialize(this, this._declarations, d, cache, {});
         }
     };
 
@@ -407,30 +400,30 @@
 
     // Copy unit declaration and its dependencies
     function pickUnit(srcDecls, destDecls, name, picked, stack) {
-        if (!checkRequireName(name)) {
-            throw error("Invalid unit name '" + name + "' in pick settings");
-        }
-        forEach(srcDecls, name, function(depName) {
-            if (!picked[depName]) {
-                if (stack[depName]) {
-                    throw error("Recursive dependency '" + depName + "'");
-                }
-                stack[depName] = true;
-                var decl = srcDecls[depName];
-                for (var i = 0, len = decl._dependencies.length; i < len; i++) {
-                    pickUnit(srcDecls, destDecls,
-                            decl._dependencies[i], picked, stack);
-                }
-                destDecls[depName] = decl;
-                picked[depName] = true;
+        var decl = srcDecls[name];
+        if (!picked[name]) {
+            if (stack[name]) {
+                throw error("Recursive dependency '" + name + "'");
             }
-        });
+            stack[name] = true;
+            for (var i = 0, len = decl._dependencies.length; i < len; i++) {
+                var reqName = decl._dependencies[i];
+                forEach(srcDecls, reqName, function(depName) {
+                    if (depName != name) {
+                        pickUnit(srcDecls, destDecls, depName, picked, stack);
+                    }
+                });
+            }
+            destDecls[name] = decl;
+            picked[name] = true;
+        }
     }
 
     // Iterate over `settings.unit`, executing a `pickUnit` function for each
     // item
     function pickUnits(dest, settings) {
-        var units = settings.units || [];
+        var picked = {},
+            units = settings.units || [];
         if (!isArray(units)) {
             throw error("Invalid units array in pick settings");
         }
@@ -440,9 +433,16 @@
             if (!(settings.namespace instanceof Gumup)) {
                 throw error("Invalid namespace in pick settings");
             }
+            var srcDecls = settings.namespace._declarations;
             for (var i = 0; i < len; i++) {
-                pickUnit(settings.namespace._declarations, dest._declarations,
-                        units[i], {}, {});
+                var reqName = units[i];
+                if (!checkRequireName(reqName)) {
+                    throw error("Invalid unit name '" + reqName
+                            + "' in pick settings");
+                }
+                forEach(srcDecls, reqName, function(depName) {
+                    pickUnit(srcDecls, dest._declarations, depName, picked, {});
+                });
             }
         }
     }
@@ -456,41 +456,40 @@
     }
 
     // Create unit object in namespace
-    function initialize(dest, declarations, name, cache) {
+    function initialize(dest, declarations, name, cache, inited) {
         var decl = declarations[name];
-        if (!cache.inited[name]) {
+        if (!inited[name]) {
             // Create unit dependencies first
             var len = cache.dependencies[name].length;
             for (var i = 0; i < len; i++) {
                 initialize(dest, declarations,
-                    cache.dependencies[name][i], cache);
+                    cache.dependencies[name][i], cache, inited);
             }
             // Create unit object
             decl._init(dest, name);
-            cache.inited[name] = true;
+            inited[name] = true;
         }
     }
 
     // Check and prepare (uncap `*` mask) unit dependencies
-    function resolve(declarations, name, cache, stack) {
+    function resolve(declarations, name, cache, resolved, stack) {
         var decl = declarations[name];
-        if (!cache.resolved[name]) {
+        if (!resolved[name]) {
             if (stack[name]) {
                 throw error("Recursive dependency '" + name + "'");
             }
             stack[name] = true;
-            var len = decl._dependencies.length;
-            for (var i = 0; i < len; i++) {
+            for (var i = 0, len = decl._dependencies.length; i < len; i++) {
                 var reqName = decl._dependencies[i];
                 forEach(declarations, reqName, function(depName) {
-                    if (depName !== name) {
+                    if (depName != name) {
                         delete cache.root[depName];
                         cache.dependencies[name].push(depName);
-                        resolve(declarations, depName, cache, stack);
+                        resolve(declarations, depName, cache, resolved, stack);
                     }
                 });
             }
-            cache.resolved[name] = true;
+            resolved[name] = true;
         }
     }
 

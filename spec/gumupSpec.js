@@ -81,7 +81,7 @@
             function() {}
         ];
 
-        function moduleImpl(name) {
+        function unitImpl(name) {
             return function() {
                 this.name = name;
             };
@@ -187,9 +187,9 @@
 
             it("must create a valid object in the namespace", function() {
 
-                ns.module('aaa', moduleImpl("AAA"));
-                ns.module('bbb', moduleImpl("BBB"));
-                ns.module('bbb.ccc', moduleImpl("BBB.CCC"));
+                ns.module('aaa', unitImpl("AAA"));
+                ns.module('bbb', unitImpl("BBB"));
+                ns.module('bbb.ccc', unitImpl("BBB.CCC"));
 
                 expect(ns.units.aaa).toBeUndefined();
                 expect(ns.units.bbb).toBeUndefined();
@@ -219,7 +219,7 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('aaa', moduleImpl("AAA"));
+                ns.module('aaa', unitImpl("AAA"));
                 ns.object('aaa.Bbb', objectImpl("AAA.BBB"))
                     .require('aaa');
                 ns.init();
@@ -231,7 +231,7 @@
                 ns = new gumup.constructor();
 
                 ns.object('Aaa', objectImpl("AAA"));
-                ns.module('Aaa.bbb', moduleImpl("AAA.BBB"))
+                ns.module('Aaa.bbb', unitImpl("AAA.BBB"))
                     .require('Aaa');
                 ns.init();
 
@@ -244,7 +244,7 @@
                 ns.module('aaa', function() {
                     this.bbb = "AAA";
                 });
-                ns.module('aaa.bbb', moduleImpl("AAA.BBB"))
+                ns.module('aaa.bbb', unitImpl("AAA.BBB"))
                     .require('aaa');
 
                 expect(function() {
@@ -266,8 +266,8 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('aaa.bbb.ccc', moduleImpl("AAA.BBB.CCC"));
-                ns.module('aaa.bbb', moduleImpl("AAA.BBB"))
+                ns.module('aaa.bbb.ccc', unitImpl("AAA.BBB.CCC"));
+                ns.module('aaa.bbb', unitImpl("AAA.BBB"))
                     .require('aaa.bbb.ccc');
                 ns.init();
 
@@ -286,7 +286,7 @@
             });
 
             it("must inject valid dependencies", function() {
-                ns.module('aaa',moduleImpl("AAA"));
+                ns.module('aaa',unitImpl("AAA"));
                 ns.module('bbb', function(units) {
                     expect(units.aaa.name).toBe("AAA");
                     this.name = "BBB";
@@ -317,7 +317,7 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('bbb.ccc', moduleImpl("BBB.CCC"));
+                ns.module('bbb.ccc', unitImpl("BBB.CCC"));
                 ns.object('bbb.Ddd', objectImpl("BBB.DDD"));
                 ns.module('aaa', function(units) {
                     expect(units.bbb.ccc.name).toBe("BBB.CCC");
@@ -694,12 +694,12 @@
             });
 
             it("must copy unit declarations from the another namespace", function() {
-                ns.module('aaa', moduleImpl("AAA"));
-                ns.module('bbb', moduleImpl("BBB"));
-                ns.object('bbb.Ddd', objectImpl("BBB.DDD"));
-                ns.module('bbb.eee', moduleImpl("BBB.EEE"));
-                ns.module('bbb.eee.fff', moduleImpl("BBB.EEE.FFF"));
-                ns.object('Ccc', objectImpl("CCC"));
+                ns.module('aaa', unitImpl("AAA"));
+                ns.module('bbb', unitImpl("BBB"));
+                ns.module('bbb.ddd', unitImpl("BBB.DDD"));
+                ns.module('bbb.eee', unitImpl("BBB.EEE"));
+                ns.module('bbb.eee.fff', unitImpl("BBB.EEE.FFF"));
+                ns.module('ccc', unitImpl("CCC"));
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -722,9 +722,9 @@
 
                 expect(other.units.aaa.name).toBe("AAA");
                 expect(other.units.bbb.name).toBe("BBB");
-                expect(other.units.bbb.Ddd).toBeUndefined();
+                expect(other.units.bbb.ddd).toBeUndefined();
                 expect(other.units.bbb.eee).toBeUndefined();
-                expect(other.units.Ccc).toBeUndefined();
+                expect(other.units.ccc).toBeUndefined();
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -737,23 +737,23 @@
 
                 expect(other.units.aaa.name).toBe("AAA");
                 expect(other.units.bbb.name).toBeUndefined();
-                expect(other.units.bbb.Ddd.name).toBe("BBB.DDD");
+                expect(other.units.bbb.ddd.name).toBe("BBB.DDD");
                 expect(other.units.bbb.eee.name).toBe("BBB.EEE");
                 expect(other.units.bbb.eee.fff.name).toBe("BBB.EEE.FFF");
-                expect(other.units.Ccc).toBeUndefined();
+                expect(other.units.ccc).toBeUndefined();
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
 
                 other.pick({
                     namespace: ns,
-                    units: ['aaa', 'Ccc']
+                    units: ['aaa', 'ccc']
                 });
                 other.init();
 
                 expect(other.units.aaa.name).toBe("AAA");
                 expect(other.units.bbb).toBeUndefined();
-                expect(other.units.Ccc.name).toBe("CCC");
+                expect(other.units.ccc.name).toBe("CCC");
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -766,23 +766,27 @@
 
                 expect(other.units.aaa.name).toBe("AAA");
                 expect(other.units.bbb.name).toBe("BBB");
-                expect(other.units.bbb.Ddd.name).toBe("BBB.DDD");
+                expect(other.units.bbb.ddd.name).toBe("BBB.DDD");
                 expect(other.units.bbb.eee.name).toBe("BBB.EEE");
                 expect(other.units.bbb.eee.fff.name).toBe("BBB.EEE.FFF");
-                expect(other.units.Ccc.name).toBe("CCC");
+                expect(other.units.ccc.name).toBe("CCC");
             });
 
             it("must copy dependencies from the another namespace", function() {
-                ns.module('aaa', moduleImpl("AAA"));
-                ns.object('Bbb', objectImpl("BBB"))
+                ns.module('aaa', unitImpl("AAA"));
+                ns.module('bbb', unitImpl("BBB"))
                     .require('aaa');
-                ns.module('ccc', moduleImpl("CCC"))
-                    .require('Bbb');
-                ns.object('Ddd', objectImpl("DDD"))
+                ns.module('ccc', unitImpl("CCC"))
+                    .require('bbb');
+                ns.module('ddd', unitImpl("DDD"))
                     .require('ccc');
-                ns.object('eee.fff', objectImpl("FFF"));
-                ns.object('eee.ggg', objectImpl("GGG"));
-                ns.object('hhh', objectImpl("HHH"))
+                ns.module('eee.fff', unitImpl("FFF"));
+                ns.module('eee.ggg', unitImpl("GGG"));
+                ns.module('hhh', unitImpl("HHH"))
+                    .require('*');
+                ns.module('iii', unitImpl("III"))
+                    .require('eee.*');
+                ns.module('jjj', unitImpl("JJJ"))
                     .require('eee.fff');
 
                 //------------------------------------------------------------
@@ -795,44 +799,31 @@
                 other.init();
 
                 expect(other.units.aaa.name).toBe("AAA");
-                expect(other.units.Bbb.name).toBe("BBB");
+                expect(other.units.bbb.name).toBe("BBB");
                 expect(other.units.ccc.name).toBe("CCC");
-                expect(other.units.Ddd).toBeUndefined();
+                expect(other.units.ddd).toBeUndefined();
                 expect(other.units.eee).toBeUndefined();
                 expect(other.units.hhh).toBeUndefined();
+                expect(other.units.iii).toBeUndefined();
+                expect(other.units.jjj).toBeUndefined();
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
 
                 other.pick({
                     namespace: ns,
-                    units: ['Ddd']
+                    units: ['ddd']
                 });
                 other.init();
 
                 expect(other.units.aaa.name).toBe("AAA");
-                expect(other.units.Bbb.name).toBe("BBB");
+                expect(other.units.bbb.name).toBe("BBB");
                 expect(other.units.ccc.name).toBe("CCC");
-                expect(other.units.Ddd.name).toBe("DDD");
+                expect(other.units.ddd.name).toBe("DDD");
                 expect(other.units.eee).toBeUndefined();
                 expect(other.units.hhh).toBeUndefined();
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                other.pick({
-                    namespace: ns,
-                    units: ['eee.fff']
-                });
-                other.init();
-
-                expect(other.units.aaa).toBeUndefined();
-                expect(other.units.Bbb).toBeUndefined();
-                expect(other.units.ccc).toBeUndefined();
-                expect(other.units.Ddd).toBeUndefined();
-                expect(other.units.eee.fff.name).toBe("FFF");
-                expect(other.units.eee.ggg).toBeUndefined();
-                expect(other.units.hhh).toBeUndefined();
+                expect(other.units.iii).toBeUndefined();
+                expect(other.units.jjj).toBeUndefined();
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -843,18 +834,59 @@
                 });
                 other.init();
 
+                expect(other.units.aaa.name).toBe("AAA");
+                expect(other.units.bbb.name).toBe("BBB");
+                expect(other.units.ccc.name).toBe("CCC");
+                expect(other.units.ddd.name).toBe("DDD");
+                expect(other.units.eee.fff.name).toBe("FFF");
+                expect(other.units.eee.ggg.name).toBe("GGG");
+                expect(other.units.hhh.name).toBe("HHH");
+                expect(other.units.iii.name).toBe("III");
+                expect(other.units.jjj.name).toBe("JJJ");
+
+                //------------------------------------------------------------
+                other = new gumup.constructor();
+
+                other.pick({
+                    namespace: ns,
+                    units: ['iii']
+                });
+                other.init();
+
                 expect(other.units.aaa).toBeUndefined();
-                expect(other.units.Bbb).toBeUndefined();
+                expect(other.units.bbb).toBeUndefined();
                 expect(other.units.ccc).toBeUndefined();
-                expect(other.units.Ddd).toBeUndefined();
+                expect(other.units.ddd).toBeUndefined();
+                expect(other.units.eee.fff.name).toBe("FFF");
+                expect(other.units.eee.ggg.name).toBe("GGG");
+                expect(other.units.hhh).toBeUndefined();
+                expect(other.units.iii.name).toBe("III");
+                expect(other.units.jjj).toBeUndefined();
+
+                //------------------------------------------------------------
+                other = new gumup.constructor();
+
+                other.pick({
+                    namespace: ns,
+                    units: ['jjj']
+                });
+                other.init();
+
+                expect(other.units.aaa).toBeUndefined();
+                expect(other.units.bbb).toBeUndefined();
+                expect(other.units.ccc).toBeUndefined();
+                expect(other.units.ddd).toBeUndefined();
                 expect(other.units.eee.fff.name).toBe("FFF");
                 expect(other.units.eee.ggg).toBeUndefined();
-                expect(other.units.hhh.name).toBe("HHH");
+                expect(other.units.hhh).toBeUndefined();
+                expect(other.units.iii).toBeUndefined();
+                expect(other.units.jjj.name).toBe("JJJ");
             });
 
             it("must inject the dependencies", function() {
-                ns.module('aaa', moduleImpl("AAA"));
-                ns.object('Bbb', objectImpl("BBB"));
+                ns.module('aaa', unitImpl("AAA"));
+                ns.object('bbb', objectImpl("BBB"));
+                ns.constr("Ccc", constrImpl("CCC"));
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -883,15 +915,19 @@
                             implementation: "aaa"
                         },
                         {
-                            name: "test.Bbb",
-                            implementation: "Bbb"
-                        }
-                    ]
+                            name: "test.bbb",
+                            implementation: "bbb"
+                        },
+                        {
+                            name: "test.Ccc",
+                            implementation: "Ccc"
+                        }                    ]
                 });
                 other.init();
 
                 expect(other.units.test.aaa.name).toBe("AAA");
-                expect(other.units.test.Bbb.name).toBe("BBB");
+                expect(other.units.test.bbb.name).toBe("BBB");
+                expect(other.units.test.Ccc()).toBe("CCC");
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -899,21 +935,21 @@
                 other.pick({
                     dependencies: [
                         {
-                            name: "ccc",
+                            name: "ddd",
                             implementation: {
-                                name: "CCC"
+                                name: "DDD"
                             }
                         },
                         {
-                            name: "ddd",
+                            name: "eee",
                             implementation: 123
                         }
                     ]
                 });
                 other.init();
 
-                expect(other.units.ccc.name).toBe("CCC");
-                expect(other.units.ddd).toBe(123);
+                expect(other.units.ddd.name).toBe("DDD");
+                expect(other.units.eee).toBe(123);
             });
 
             it("must accept valid unit names", function() {
@@ -1136,6 +1172,102 @@
                         });
                     }).not.toThrow();
                 }
+            });
+
+            it("must catch recursive dependencies", function() {
+                other = new gumup.constructor();
+
+                ns.module('a', function() {}).require('b');
+                ns.module('b', function() {}).require('a');
+                expect(function() {
+                    other.pick({
+                        namespace: ns,
+                        units: ['a']
+                    });
+                }).toThrow();
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+                other = new gumup.constructor();
+
+                ns.module('a', function() {}).require('b');
+                ns.module('b', function() {}).require('c');
+                ns.module('c', function() {}).require('a');
+                expect(function() {
+                    other.pick({
+                        namespace: ns,
+                        units: ['a']
+                    });
+                }).toThrow();
+
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+                other = new gumup.constructor();
+
+                ns.module('a', function() {}).require('*');
+                ns.module('b', function() {}).require('*');
+                expect(function() {
+                    other.pick({
+                        namespace: ns,
+                        units: ['a']
+                    });
+                }).toThrow();
+
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+                other = new gumup.constructor();
+
+                ns.module('a', function() {}).require('*');
+                ns.module('b', function() {}).require('c');
+                ns.module('c', function() {}).require('a');
+                expect(function() {
+                    other.pick({
+                        namespace: ns,
+                        units: ['a']
+                    });
+                }).toThrow();
+
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+                other = new gumup.constructor();
+
+                ns.module('a', function() {})
+                    .require('d')
+                    .require('e');
+                ns.module('b', function() {})
+                    .require('e');
+                ns.module('c', function() {})
+                    .require('h')
+                    .require('f');
+                ns.module('d', function() {})
+                    .require('g');
+                ns.module('e', function() {})
+                    .require('h');
+                ns.module('f', function() {})
+                    .require('i');
+                ns.module('g', function() {})
+                    .require('h')
+                    .require('j');
+                ns.module('h', function() {})
+                    .require('i')
+                    .require('k');
+                ns.module('i', function() {})
+                    .require('l');
+                ns.module('j', function() {})
+                    .require('k');
+                ns.module('k', function() {});
+                ns.module('l', function() {})
+                    .require('b')
+                    .require('k');
+                expect(function() {
+                    other.pick({
+                        namespace: ns,
+                        units: ['a']
+                    });
+                }).toThrow();
             });
 
             it("must catch nonexistent units", function() {
