@@ -95,80 +95,6 @@
             };
         }
 
-        describe("gumup.constr", function() {
-
-            var ns;
-
-            beforeEach(function() {
-                ns = new gumup.constructor();
-            });
-
-            it("must create a constr", function() {
-                var module = ns.constr('Aaa', function() {});
-                expect(typeof module.require).toBe("function");
-            });
-
-            it("must accept a valid unit name", function() {
-                var i, len, name;
-                for (i = 0, len = validNames.length; i < len; i++) {
-                    name = validNames[i];
-                    expect(function() {
-                        ns.constr(name, function() {});
-                    }).not.toThrow();
-                }
-                for (i = 0, len = requiredNames.length; i < len; i++) {
-                    name = requiredNames[i];
-                    expect(function() {
-                        ns.constr(name, function() {});
-                    }).toThrow();
-                }
-                for (i = 0, len = invalidNames.length; i < len; i++) {
-                    name = invalidNames[i];
-                    expect(function() {
-                        ns.constr(name, function() {});
-                    }).toThrow();
-                }
-                for (i = 0, len = objectNames.length; i < len; i++) {
-                    name = objectNames[i];
-                    expect(function() {
-                        ns.constr(name, function() {});
-                    }).toThrow();
-                }
-            });
-
-            it("must accept a valid unit implementation", function() {
-                expect(function() {
-                    ns.constr('valid', function() {});
-                }).not.toThrow();
-                expect(function() {
-                    ns.constr('invalid.undefined');
-                }).toThrow();
-                expect(function() {
-                    ns.constr('invalid.null');
-                }).toThrow();
-                expect(function() {
-                    ns.constr('invalid.number', 123);
-                }).toThrow();
-                expect(function() {
-                    ns.constr('invalid.string', "abc");
-                }).toThrow();
-                expect(function() {
-                    ns.constr('invalid.array', []);
-                }).toThrow();
-                expect(function() {
-                    ns.constr('invalid.object', {});
-                }).toThrow();
-            });
-
-            it("must deny creating duplicates of units", function() {
-                ns.constr('aaa', function() {});
-                expect(function() {
-                    ns.constr('aaa', function() {});
-                }).toThrow();
-            });
-
-        });
-
         describe("gumup.init", function() {
 
             var ns;
@@ -177,231 +103,53 @@
                 ns = new gumup.constructor();
             });
 
-            describe("init module", function() {
-
-                it("must create a valid module in the namespace", function() {
-                    ns.module('aaa', defaultImpl("AAA"));
-                    ns.module('bbb', customImpl("BBB"));
-                    ns.module('ccc.ddd', defaultImpl("BBB.CCC"));
-                    ns.module('eee', function() {
-                        return "anything";
-                    });
-                    ns.init();
-
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.bbb).toEqual({});
-                    expect(ns.units.ccc.ddd.value).toBe("BBB.CCC");
-                    expect(ns.units.eee).toEqual({});
+            it("must create a valid unit in the namespace", function() {
+                ns.unit('aaa', defaultImpl("AAA"));
+                ns.unit('bbb', customImpl("BBB"));
+                ns.unit('ccc.ddd', defaultImpl("BBB.CCC"));
+                ns.unit('eee', function() {
+                    return "anything";
                 });
+                ns.init();
 
-                it("must allow to create the module over an existing objects in the namespace", function() {
-                    ns.module('aaa', defaultImpl("AAA"));
-                    ns.module('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-                    ns.init();
-
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.object('aaa', defaultImpl("AAA"));
-                    ns.module('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-                    ns.init();
-
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.constr('Aaa', defaultImpl("AAA"));
-                    ns.module('Aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('Aaa');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.object('aaa', function() {
-                        return "anything";
-                    });
-                    ns.module('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-
-                    //------------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.module('aaa.bbb.ccc', defaultImpl("AAA.BBB.CCC"));
-                    ns.module('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa.bbb.ccc');
-                    ns.init();
-
-                    expect(ns.units.aaa.bbb.ccc.value).toBe("AAA.BBB.CCC");
-                    expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
-                });
-
+                expect(ns.units.aaa.value).toBe("AAA");
+                expect(ns.units.bbb.value).toBe("BBB");
+                expect(ns.units.ccc.ddd.value).toBe("BBB.CCC");
+                expect(ns.units.eee).toBe("anything");
             });
 
-            describe("init object", function() {
+            it("must allow to create the unit over an existing objects in the namespace", function() {
+                ns.unit('aaa', defaultImpl("AAA"));
+                ns.unit('aaa.bbb', defaultImpl("AAA.BBB"))
+                    .require('aaa');
+                ns.init();
 
-                it("must create a valid object in the namespace", function() {
-                    ns.object('aaa', defaultImpl("AAA"));
-                    ns.object('bbb', customImpl("BBB"));
-                    ns.object('ccc.ddd', customImpl("CCC.DDD"));
-                    ns.object('eee', function() {
-                        return "anything";
-                    });
-                    ns.init();
+                expect(ns.units.aaa.value).toBe("AAA");
+                expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
 
-                    expect(typeof ns.units.aaa).toBe("object");
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.bbb.value).toBe("BBB");
-                    expect(ns.units.ccc.ddd.value).toBe("CCC.DDD");
-                    expect(ns.units.eee).toBe("anything");
+                //--------------------------------------------------------
+                ns = new gumup.constructor();
+
+                ns.unit('aaa', function() {
+                    return "anything";
                 });
+                ns.unit('aaa.bbb', defaultImpl("AAA.BBB"))
+                    .require('aaa');
 
-                it("must allow to create the object over an existing module in the namespace", function() {
-                    ns.module('aaa', defaultImpl("AAA"));
-                    ns.object('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
+                expect(function() {
                     ns.init();
+                }).toThrow();
 
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
 
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
+                ns.unit('aaa.bbb.ccc', defaultImpl("AAA.BBB.CCC"));
+                ns.unit('aaa.bbb', defaultImpl("AAA.BBB"))
+                    .require('aaa.bbb.ccc');
+                ns.init();
 
-                    ns.object('aaa', defaultImpl("AAA"));
-                    ns.object('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-                    ns.init();
-
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.constr('Aaa', defaultImpl("AAA"));
-                    ns.object('Aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('Aaa');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.object('aaa', function() {
-                        return "anything";
-                    });
-                    ns.constr('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-
-                    //------------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.module('aaa.bbb.ccc', defaultImpl("AAA.BBB.CCC"));
-                    ns.constr('aaa.bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa.bbb.ccc');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-                });
-
-            });
-
-            describe("init constructor", function() {
-
-                it("must create a valid constructor in the namespace", function() {
-                    ns.constr('Aaa', defaultImpl("AAA"));
-                    ns.constr('Bbb', customImpl("BBB"));
-                    ns.constr('ccc.Ddd', customImpl("CCC.DDD"));
-                    ns.constr('Eee', function() {
-                        return "anything";
-                    });
-                    ns.init();
-
-                    expect(typeof ns.units.Aaa).toBe("function");
-                    expect(ns.units.Aaa.value).toBe("AAA");
-                    expect(ns.units.Bbb.value).toBe("BBB");
-                    expect(ns.units.ccc.Ddd.value).toBe("CCC.DDD");
-                    expect(ns.units.Eee).toBe("anything");
-                });
-
-                it("must allow to create the constructor over an existing module in the namespace", function() {
-                    ns.module('aaa', defaultImpl("AAA"));
-                    ns.constr('aaa.Bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-                    ns.init();
-
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.aaa.Bbb.value).toBe("AAA.BBB");
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.object('aaa', defaultImpl("AAA"));
-                    ns.constr('aaa.Bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-                    ns.init();
-
-                    expect(ns.units.aaa.value).toBe("AAA");
-                    expect(ns.units.aaa.Bbb.value).toBe("AAA.BBB");
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.constr('Aaa', defaultImpl("AAA"));
-                    ns.constr('Aaa.Bbb', defaultImpl("AAA.BBB"))
-                        .require('Aaa');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-
-                    //--------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.object('aaa', function() {
-                        return "anything";
-                    });
-                    ns.constr('aaa.Bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-
-                    //------------------------------------------------------------
-                    ns = new gumup.constructor();
-
-                    ns.module('aaa.Bbb.ccc', defaultImpl("AAA.BBB.CCC"));
-                    ns.constr('aaa.Bbb', defaultImpl("AAA.BBB"))
-                        .require('aaa.Bbb.ccc');
-
-                    expect(function() {
-                        ns.init();
-                    }).toThrow();
-                });
-
+                expect(ns.units.aaa.bbb.ccc.value).toBe("AAA.BBB.CCC");
+                expect(ns.units.aaa.bbb.value).toBe("AAA.BBB");
             });
 
             it("must resolve dependencies", function() {
@@ -413,14 +161,14 @@
 
                 //------------------------------------------------------------
                 expect(ns.solution).toBeUndefined();
-                ns.module('c', init("C"))
+                ns.unit('c', init("C"))
                     .require('b');
-                ns.module('a', init("A"));
-                ns.module('d', init("D"))
+                ns.unit('a', init("A"));
+                ns.unit('d', init("D"))
                     .require('a')
                     .require('c')
                     .require('b');
-                ns.module('b', init("B"))
+                ns.unit('b', init("B"))
                     .require('a');
                 ns.init();
                 expect(ns.solution).toBe("ABCD");
@@ -429,12 +177,12 @@
                 ns = new gumup.constructor();
 
                 expect(ns.solution).toBeUndefined();
-                ns.module('c', init("C"))
+                ns.unit('c', init("C"))
                     .require('b');
-                ns.module('a', init("A"));
-                ns.module('d', init("D"))
+                ns.unit('a', init("A"));
+                ns.unit('d', init("D"))
                     .require('*');
-                ns.module('b', init("B"))
+                ns.unit('b', init("B"))
                     .require('a');
                 ns.init();
                 expect(ns.solution).toBe("ABCD");
@@ -443,23 +191,23 @@
                 ns = new gumup.constructor();
 
                 expect(ns.solution).toBeUndefined();
-                ns.module('c', init("C"))
+                ns.unit('c', init("C"))
                     .require('b');
-                ns.module('b.b3._2', init("_"))
+                ns.unit('b.b3._2', init("_"))
                     .require('b.b2');
-                ns.module('a', init("A"));
-                ns.module('b.b3._3', init("_"))
+                ns.unit('a', init("A"));
+                ns.unit('b.b3._3', init("_"))
                     .require('b.b2');
-                ns.module('b.b1', init("b1"))
+                ns.unit('b.b1', init("b1"))
                     .require('a');
-                ns.module('d', init("D"))
+                ns.unit('d', init("D"))
                     .require('*');
-                ns.module('b.b2', init("b2"))
+                ns.unit('b.b2', init("b2"))
                     .require('b.b1');
-                ns.module('b', init("B"))
+                ns.unit('b', init("B"))
                     .require('b.*')
                     .require('a');
-                ns.module('b.b3._1', init("_"))
+                ns.unit('b.b3._1', init("_"))
                     .require('b.b2');
                 ns.init();
                 expect(ns.solution).toBe("Ab1b2___BCD");
@@ -467,31 +215,31 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('a', function() {})
+                ns.unit('a', function() {})
                     .require('d')
                     .require('e');
-                ns.module('b', function() {})
+                ns.unit('b', function() {})
                     .require('e');
-                ns.module('c', function() {})
+                ns.unit('c', function() {})
                     .require('h')
                     .require('f');
-                ns.module('d', function() {})
+                ns.unit('d', function() {})
                     .require('g');
-                ns.module('e', function() {})
+                ns.unit('e', function() {})
                     .require('h');
-                ns.module('f', function() {})
+                ns.unit('f', function() {})
                     .require('i');
-                ns.module('g', function() {})
+                ns.unit('g', function() {})
                     .require('h')
                     .require('j');
-                ns.module('h', function() {})
+                ns.unit('h', function() {})
                     .require('k');
-                ns.module('i', function() {})
+                ns.unit('i', function() {})
                     .require('l');
-                ns.module('j', function() {})
+                ns.unit('j', function() {})
                     .require('k');
-                ns.module('k', function() {});
-                ns.module('l', function() {})
+                ns.unit('k', function() {});
+                ns.unit('l', function() {})
                     .require('b')
                     .require('k');
                 expect(function() {
@@ -500,23 +248,23 @@
             });
 
             it("must inject resolved dependencies", function() {
-                ns.module('aaa',defaultImpl("AAA"));
-                ns.module('bbb', function(units) {
+                ns.unit('aaa', defaultImpl("AAA"));
+                ns.unit('bbb', function(units) {
                     expect(units.aaa.value).toBe("AAA");
                     this.value = "BBB";
                 }).require('aaa');
-                ns.module('ccc', function(units) {
+                ns.unit('ccc', function(units) {
                     expect(units.aaa.value).toBe("AAA");
                     expect(units.bbb.value).toBe("BBB");
                     this.value = "CCC";
                 }).require('bbb');
-                ns.object("ddd", function(units) {
+                ns.unit("ddd", function(units) {
                     expect(units.aaa.value).toBe("AAA");
                     expect(units.bbb.value).toBe("BBB");
                     expect(units.ccc.value).toBe("CCC");
                     this.value = "DDD";
                 });
-                ns.module('main', function(units) {
+                ns.unit('main', function(units) {
                     expect(units.aaa.value).toBe("AAA");
                     expect(units.bbb.value).toBe("BBB");
                     expect(units.ccc.value).toBe("CCC");
@@ -527,15 +275,15 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('bbb.ccc', defaultImpl("BBB.CCC"));
-                ns.module('bbb.ddd', defaultImpl("BBB.DDD"));
-                ns.module('aaa', function(units) {
+                ns.unit('bbb.ccc', defaultImpl("BBB.CCC"));
+                ns.unit('bbb.ddd', defaultImpl("BBB.DDD"));
+                ns.unit('aaa', function(units) {
                     expect(units.bbb.ccc.value).toBe("BBB.CCC");
                     expect(units.bbb.ddd.value).toBe("BBB.DDD");
                     expect(units.bbb.value).toBeUndefined();
                     this.value = "AAA";
                 }).require('bbb.*');
-                ns.module('bbb', function(units) {
+                ns.unit('bbb', function(units) {
                     expect(units.aaa.value).toBe("AAA");
                     this.value = "BBB";
                 }).require('aaa');
@@ -543,8 +291,8 @@
             });
 
             it("must catch recursive dependencies", function() {
-                ns.module('a', function() {}).require('b');
-                ns.module('b', function() {}).require('a');
+                ns.unit('a', function() {}).require('b');
+                ns.unit('b', function() {}).require('a');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -552,9 +300,9 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('a', function() {}).require('b');
-                ns.module('b', function() {}).require('c');
-                ns.module('c', function() {}).require('a');
+                ns.unit('a', function() {}).require('b');
+                ns.unit('b', function() {}).require('c');
+                ns.unit('c', function() {}).require('a');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -562,8 +310,8 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('a', function() {}).require('*');
-                ns.module('b', function() {}).require('*');
+                ns.unit('a', function() {}).require('*');
+                ns.unit('b', function() {}).require('*');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -571,9 +319,9 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('a', function() {}).require('*');
-                ns.module('b', function() {}).require('c');
-                ns.module('c', function() {}).require('a');
+                ns.unit('a', function() {}).require('*');
+                ns.unit('b', function() {}).require('c');
+                ns.unit('c', function() {}).require('a');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -581,32 +329,32 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.module('a', function() {})
+                ns.unit('a', function() {})
                     .require('d')
                     .require('e');
-                ns.module('b', function() {})
+                ns.unit('b', function() {})
                     .require('e');
-                ns.module('c', function() {})
+                ns.unit('c', function() {})
                     .require('h')
                     .require('f');
-                ns.module('d', function() {})
+                ns.unit('d', function() {})
                     .require('g');
-                ns.module('e', function() {})
+                ns.unit('e', function() {})
                     .require('h');
-                ns.module('f', function() {})
+                ns.unit('f', function() {})
                     .require('i');
-                ns.module('g', function() {})
+                ns.unit('g', function() {})
                     .require('h')
                     .require('j');
-                ns.module('h', function() {})
+                ns.unit('h', function() {})
                     .require('i')
                     .require('k');
-                ns.module('i', function() {})
+                ns.unit('i', function() {})
                     .require('l');
-                ns.module('j', function() {})
+                ns.unit('j', function() {})
                     .require('k');
-                ns.module('k', function() {});
-                ns.module('l', function() {})
+                ns.unit('k', function() {});
+                ns.unit('l', function() {})
                     .require('b')
                     .require('k');
                 expect(function() {
@@ -615,19 +363,19 @@
             });
 
             it("must catch nonexistent dependencies", function() {
-                ns.module('aaa', function() {}).require('bbb');
+                ns.unit('aaa', function() {}).require('bbb');
                 expect(function() {
                     ns.init();
                 }).toThrow();
             });
 
             it("must deny modifying during initialization", function() {
-                var module = ns.module('aaa', function() {
+                var module = ns.unit('aaa', function() {
                     expect(function() {
                         module.require('bbb');
                     }).toThrow();
                     expect(function() {
-                        ns.module('bbb', function() {});
+                        ns.unit('bbb', function() {});
                     }).toThrow();
                     expect(function() {
                         ns.init();
@@ -637,164 +385,16 @@
             });
 
             it("must deny modifying after initialization", function() {
-                var module = ns.module('aaa', function() {});
+                var module = ns.unit('aaa', function() {});
                 ns.init();
                 expect(function() {
                     module.require('bbb');
                 }).toThrow();
                 expect(function() {
-                    ns.module('bbb', function() {});
+                    ns.unit('bbb', function() {});
                 }).toThrow();
                 expect(function() {
                     ns.init();
-                }).toThrow();
-            });
-
-        });
-
-        describe("gumup.module", function() {
-
-            var ns;
-
-            beforeEach(function() {
-                ns = new gumup.constructor();
-            });
-
-            it("must create a module", function() {
-                var module = ns.module('aaa', function() {});
-                expect(typeof module.require).toBe("function");
-            });
-
-            it("must accept a valid unit name", function() {
-                var i, len, name;
-                for (i = 0, len = validNames.length; i < len; i++) {
-                    name = validNames[i];
-                    expect(function() {
-                        ns.module(name, function() {});
-                    }).not.toThrow();
-                }
-                for (i = 0, len = requiredNames.length; i < len; i++) {
-                    name = requiredNames[i];
-                    expect(function() {
-                        ns.module(name, function() {});
-                    }).toThrow();
-                }
-                for (i = 0, len = invalidNames.length; i < len; i++) {
-                    name = invalidNames[i];
-                    expect(function() {
-                        ns.module(name, function() {});
-                    }).toThrow();
-                }
-                for (i = 0, len = objectNames.length; i < len; i++) {
-                    name = objectNames[i];
-                    expect(function() {
-                        ns.module(name, function() {});
-                    }).toThrow();
-                }
-            });
-
-            it("must accept a valid unit implementation", function() {
-                expect(function() {
-                    ns.module('valid', function() {});
-                }).not.toThrow();
-                expect(function() {
-                    ns.module('invalid.undefined');
-                }).toThrow();
-                expect(function() {
-                    ns.module('invalid.null');
-                }).toThrow();
-                expect(function() {
-                    ns.module('invalid.number', 123);
-                }).toThrow();
-                expect(function() {
-                    ns.module('invalid.string', "abc");
-                }).toThrow();
-                expect(function() {
-                    ns.module('invalid.array', []);
-                }).toThrow();
-                expect(function() {
-                    ns.module('invalid.object', {});
-                }).toThrow();
-            });
-
-            it("must deny creating duplicates of units", function() {
-                ns.module('aaa', function() {});
-                expect(function() {
-                    ns.module('aaa', function() {});
-                }).toThrow();
-            });
-
-        });
-
-        describe("gumup.object", function() {
-
-            var ns;
-
-            beforeEach(function() {
-                ns = new gumup.constructor();
-            });
-
-            it("must create an object", function() {
-                var module = ns.object('aaa', function() {});
-                expect(typeof module.require).toBe("function");
-            });
-
-            it("must accept a valid unit name", function() {
-                var i, len, name;
-                for (i = 0, len = validNames.length; i < len; i++) {
-                    name = validNames[i];
-                    expect(function() {
-                        ns.object(name, function() {});
-                    }).not.toThrow();
-                }
-                for (i = 0, len = requiredNames.length; i < len; i++) {
-                    name = requiredNames[i];
-                    expect(function() {
-                        ns.object(name, function() {});
-                    }).toThrow();
-                }
-                for (i = 0, len = invalidNames.length; i < len; i++) {
-                    name = invalidNames[i];
-                    expect(function() {
-                        ns.objet(name, function() {});
-                    }).toThrow();
-                }
-                for (i = 0, len = objectNames.length; i < len; i++) {
-                    name = objectNames[i];
-                    expect(function() {
-                        ns.object(name, function() {});
-                    }).toThrow();
-                }
-            });
-
-            it("must accept a valid unit implementation", function() {
-                expect(function() {
-                    ns.object('valid', function() {});
-                }).not.toThrow();
-                expect(function() {
-                    ns.object('invalid.undefined');
-                }).toThrow();
-                expect(function() {
-                    ns.object('invalid.null');
-                }).toThrow();
-                expect(function() {
-                    ns.object('invalid.number', 123);
-                }).toThrow();
-                expect(function() {
-                    ns.object('invalid.string', "abc");
-                }).toThrow();
-                expect(function() {
-                    ns.object('invalid.array', []);
-                }).toThrow();
-                expect(function() {
-                    ns.object('invalid.object', {});
-                }).toThrow();
-            });
-
-            it("must deny creating duplicates of units", function() {
-                ns.object('aaa', function() {});
-                expect(function() {
-                    ns.object('aaa', function() {});
                 }).toThrow();
             });
 
@@ -809,12 +409,12 @@
             });
 
             it("must copy unit declarations from the another namespace", function() {
-                ns.module('aaa', defaultImpl("AAA"));
-                ns.module('bbb', defaultImpl("BBB"));
-                ns.module('bbb.ddd', defaultImpl("BBB.DDD"));
-                ns.module('bbb.eee', defaultImpl("BBB.EEE"));
-                ns.module('bbb.eee.fff', defaultImpl("BBB.EEE.FFF"));
-                ns.module('ccc', defaultImpl("CCC"));
+                ns.unit('aaa', defaultImpl("AAA"));
+                ns.unit('bbb', defaultImpl("BBB"));
+                ns.unit('bbb.ddd', defaultImpl("BBB.DDD"));
+                ns.unit('bbb.eee', defaultImpl("BBB.EEE"));
+                ns.unit('bbb.eee.fff', defaultImpl("BBB.EEE.FFF"));
+                ns.unit('ccc', defaultImpl("CCC"));
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -888,20 +488,20 @@
             });
 
             it("must copy dependencies from the another namespace", function() {
-                ns.module('aaa', defaultImpl("AAA"));
-                ns.module('bbb', defaultImpl("BBB"))
+                ns.unit('aaa', defaultImpl("AAA"));
+                ns.unit('bbb', defaultImpl("BBB"))
                     .require('aaa');
-                ns.module('ccc', defaultImpl("CCC"))
+                ns.unit('ccc', defaultImpl("CCC"))
                     .require('bbb');
-                ns.module('ddd', defaultImpl("DDD"))
+                ns.unit('ddd', defaultImpl("DDD"))
                     .require('ccc');
-                ns.module('eee.fff', defaultImpl("FFF"));
-                ns.module('eee.ggg', defaultImpl("GGG"));
-                ns.module('hhh', defaultImpl("HHH"))
+                ns.unit('eee.fff', defaultImpl("FFF"));
+                ns.unit('eee.ggg', defaultImpl("GGG"));
+                ns.unit('hhh', defaultImpl("HHH"))
                     .require('*');
-                ns.module('iii', defaultImpl("III"))
+                ns.unit('iii', defaultImpl("III"))
                     .require('eee.*');
-                ns.module('jjj', defaultImpl("JJJ"))
+                ns.unit('jjj', defaultImpl("JJJ"))
                     .require('eee.fff');
 
                 //------------------------------------------------------------
@@ -999,9 +599,9 @@
             });
 
             it("must inject the dependencies", function() {
-                ns.module('aaa', defaultImpl("AAA"));
-                ns.object('bbb', customImpl("BBB"));
-                ns.constr("Ccc", customImpl("CCC"));
+                ns.unit('aaa', defaultImpl("AAA"));
+                ns.unit('bbb', customImpl("BBB"));
+                ns.unit("ccc", customImpl("CCC"));
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -1034,15 +634,15 @@
                             implementation: "bbb"
                         },
                         {
-                            name: "test.Ccc",
-                            implementation: "Ccc"
+                            name: "test.ccc",
+                            implementation: "ccc"
                         }                    ]
                 });
                 other.init();
 
                 expect(other.units.test.aaa.value).toBe("AAA");
                 expect(other.units.test.bbb.value).toBe("BBB");
-                expect(other.units.test.Ccc.value).toBe("CCC");
+                expect(other.units.test.ccc.value).toBe("CCC");
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -1072,7 +672,7 @@
 
                 for (i = 0, len = validNames.length; i < len; i++) {
                     name = validNames[i];
-                    ns.module(name, function() {});
+                    ns.unit(name, function() {});
                 }
 
                 //------------------------------------------------------------
@@ -1145,7 +745,7 @@
 
                 for (i = 0, len = validNames.length; i < len; i++) {
                     name = validNames[i];
-                    ns.module(name, function() {});
+                    ns.unit(name, function() {});
                 }
 
                 //------------------------------------------------------------
@@ -1292,8 +892,8 @@
             it("must catch recursive dependencies", function() {
                 other = new gumup.constructor();
 
-                ns.module('a', function() {}).require('b');
-                ns.module('b', function() {}).require('a');
+                ns.unit('a', function() {}).require('b');
+                ns.unit('b', function() {}).require('a');
                 expect(function() {
                     other.pick({
                         namespace: ns,
@@ -1305,23 +905,9 @@
                 ns = new gumup.constructor();
                 other = new gumup.constructor();
 
-                ns.module('a', function() {}).require('b');
-                ns.module('b', function() {}).require('c');
-                ns.module('c', function() {}).require('a');
-                expect(function() {
-                    other.pick({
-                        namespace: ns,
-                        units: ['a']
-                    });
-                }).toThrow();
-
-
-                //------------------------------------------------------------
-                ns = new gumup.constructor();
-                other = new gumup.constructor();
-
-                ns.module('a', function() {}).require('*');
-                ns.module('b', function() {}).require('*');
+                ns.unit('a', function() {}).require('b');
+                ns.unit('b', function() {}).require('c');
+                ns.unit('c', function() {}).require('a');
                 expect(function() {
                     other.pick({
                         namespace: ns,
@@ -1334,9 +920,8 @@
                 ns = new gumup.constructor();
                 other = new gumup.constructor();
 
-                ns.module('a', function() {}).require('*');
-                ns.module('b', function() {}).require('c');
-                ns.module('c', function() {}).require('a');
+                ns.unit('a', function() {}).require('*');
+                ns.unit('b', function() {}).require('*');
                 expect(function() {
                     other.pick({
                         namespace: ns,
@@ -1349,32 +934,47 @@
                 ns = new gumup.constructor();
                 other = new gumup.constructor();
 
-                ns.module('a', function() {})
+                ns.unit('a', function() {}).require('*');
+                ns.unit('b', function() {}).require('c');
+                ns.unit('c', function() {}).require('a');
+                expect(function() {
+                    other.pick({
+                        namespace: ns,
+                        units: ['a']
+                    });
+                }).toThrow();
+
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+                other = new gumup.constructor();
+
+                ns.unit('a', function() {})
                     .require('d')
                     .require('e');
-                ns.module('b', function() {})
+                ns.unit('b', function() {})
                     .require('e');
-                ns.module('c', function() {})
+                ns.unit('c', function() {})
                     .require('h')
                     .require('f');
-                ns.module('d', function() {})
+                ns.unit('d', function() {})
                     .require('g');
-                ns.module('e', function() {})
+                ns.unit('e', function() {})
                     .require('h');
-                ns.module('f', function() {})
+                ns.unit('f', function() {})
                     .require('i');
-                ns.module('g', function() {})
+                ns.unit('g', function() {})
                     .require('h')
                     .require('j');
-                ns.module('h', function() {})
+                ns.unit('h', function() {})
                     .require('i')
                     .require('k');
-                ns.module('i', function() {})
+                ns.unit('i', function() {})
                     .require('l');
-                ns.module('j', function() {})
+                ns.unit('j', function() {})
                     .require('k');
-                ns.module('k', function() {});
-                ns.module('l', function() {})
+                ns.unit('k', function() {});
+                ns.unit('l', function() {})
                     .require('b')
                     .require('k');
                 expect(function() {
@@ -1386,7 +986,7 @@
             });
 
             it("must catch nonexistent units", function() {
-                ns.module('aaa', function() {});
+                ns.unit('aaa', function() {});
 
                 //------------------------------------------------------------
                 other = new gumup.constructor();
@@ -1401,7 +1001,7 @@
                 //------------------------------------------------------------
                 other = new gumup.constructor();
 
-                ns.module('bbb', function() {});
+                ns.unit('bbb', function() {});
                 expect(function() {
                     other.pick({
                         namespace: ns,
@@ -1426,13 +1026,87 @@
             });
 
             it("must return itself", function() {
-                ns.module('aaa', function() {});
+                ns.unit('aaa', function() {});
                 other = new gumup.constructor();
                 var actual = other.pick({
                     namespace: ns,
                     units: ['aaa']
                 });
                 expect(actual).toBe(other);
+            });
+
+        });
+
+        describe("gumup.unit", function() {
+
+            var ns;
+
+            beforeEach(function() {
+                ns = new gumup.constructor();
+            });
+
+            it("must create a unit", function() {
+                var module = ns.unit('aaa', function() {});
+                expect(typeof module.require).toBe("function");
+            });
+
+            it("must accept a valid unit name", function() {
+                var i, len, name;
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
+                    expect(function() {
+                        ns.unit(name, function() {});
+                    }).not.toThrow();
+                }
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
+                    expect(function() {
+                        ns.unit(name, function() {});
+                    }).toThrow();
+                }
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
+                    expect(function() {
+                        ns.unit(name, function() {});
+                    }).toThrow();
+                }
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
+                    expect(function() {
+                        ns.unit(name, function() {});
+                    }).toThrow();
+                }
+            });
+
+            it("must accept a valid unit implementation", function() {
+                expect(function() {
+                    ns.unit('valid', function() {});
+                }).not.toThrow();
+                expect(function() {
+                    ns.unit('invalid.undefined');
+                }).toThrow();
+                expect(function() {
+                    ns.unit('invalid.null');
+                }).toThrow();
+                expect(function() {
+                    ns.unit('invalid.number', 123);
+                }).toThrow();
+                expect(function() {
+                    ns.unit('invalid.string', "abc");
+                }).toThrow();
+                expect(function() {
+                    ns.unit('invalid.array', []);
+                }).toThrow();
+                expect(function() {
+                    ns.unit('invalid.object', {});
+                }).toThrow();
+            });
+
+            it("must deny creating duplicates of units", function() {
+                ns.unit('aaa', function() {});
+                expect(function() {
+                    ns.unit('aaa', function() {});
+                }).toThrow();
             });
 
         });
@@ -1450,31 +1124,31 @@
                 for (i = 0, len = validNames.length; i < len; i++) {
                     name = validNames[i];
                     expect(function() {
-                        ns.module("V" + i, function() {}).require(name);
+                        ns.unit("V" + i, function() {}).require(name);
                     }).not.toThrow();
                 }
                 for (i = 0, len = requiredNames.length; i < len; i++) {
                     name = requiredNames[i];
                     expect(function() {
-                        ns.module("R" + i, function() {}).require(name);
+                        ns.unit("R" + i, function() {}).require(name);
                     }).not.toThrow();
                 }
                 for (i = 0, len = invalidNames.length; i < len; i++) {
                     name = invalidNames[i];
                     expect(function() {
-                        ns.module("I" + i, function() {}).require(name);
+                        ns.unit("I" + i, function() {}).require(name);
                     }).toThrow();
                 }
                 for (i = 0, len = objectNames.length; i < len; i++) {
                     name = objectNames[i];
                     expect(function() {
-                        ns.module("O" + i, function() {}).require(name);
+                        ns.unit("O" + i, function() {}).require(name);
                     }).toThrow();
                 }
             });
 
             it("must return itself", function() {
-                var module = ns.module('aaa', function() {});
+                var module = ns.unit('aaa', function() {});
                 var actual = module.require('bbb');
                 expect(actual).toBe(module);
             });
