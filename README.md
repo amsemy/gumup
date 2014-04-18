@@ -1,10 +1,6 @@
 # Gumup
 
-Gumup is simple JavaScript library that lets you organize your code with module-based approach.
-Some of the features you get with Gumup:
-- module-based namespaces
-- control over order of modules initialization
-- dependency injection
+Gumup is simple JavaScript library that lets to control the order of modules initialization.
 
 ## Basic usage
 
@@ -12,43 +8,28 @@ Include Gumup in your page. The library unconditionally occupies a `gumup` globa
 ```html
 <script src="gumup.js"></script>
 ```
-Declare your moudles using `gumup.module`. Module implementation function will called in context of created module instance.
-
+Declare your moudles using `gumup.unit`. Unit implementation function will called in context of created unit instance.
 ```javascript
-gumup.module('utils.log', implementation);
-
-function implementation() {
-
-    this.info = function(msg) {
-        log(msg).className = "info";
-    };
-
-    this.debug = function(msg) {
-        log(msg).className = "debug";
-    };
-
-    function log(msg) {
-        var p = document.createElement("p");
-        p.innerHTML = msg;
-        return document.body.appendChild(p);
-    }
-
-}
+gumup.unit('common.foo', function() {
+    this.myFunc = function() {};
+});
 ```
-
+If you need a custom object, it can be returned from the implementation function. It can be an object, function or primitive.
+```javascript
+gumup.unit('utils.bar', function() {
+    return "my unit";
+});
+```
 Use `require` method of module to specify its dependencies.
-
 ```javascript
-var module = gumup.module('main', implementation);
+var unit = gumup.unit('main', implementation);
 
-module.require('utils.log');
+unit.require('common.foo');
+unit.require('utils.bar');
 
-function implementation(modules) {
-    var log = modules.utils.log;
-
-    log.info("Init main");
-    log.debug("Debug message");
+function implementation(units) {
+    units.common.foo.myFunc();
+    units.utils.bar;
 }
 ```
-
-Hook `gumup.init()` to the page load event. ([jsfiddle](http://jsfiddle.net/amsemy/pq3uj/))
+Hook `gumup.init()` to the page load event.
