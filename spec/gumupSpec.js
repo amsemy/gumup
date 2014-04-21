@@ -701,6 +701,7 @@
 
                 //------------------------------------------------------------
                 ns.pick({
+                    namespace: other,
                     units: []
                 });
                 ns.init();
@@ -875,6 +876,22 @@
                 expect(ns.units.hhh).toBeUndefined();
                 expect(ns.units.iii).toBeUndefined();
                 expect(ns.units.jjj.value).toBe("JJJ");
+            });
+
+            it("must check the pick settings", function() {
+                expect(function () {
+                    ns.pick({});
+                }).toThrow();
+                expect(function () {
+                    ns.pick({
+                        namespace: other
+                    });
+                }).toThrow();
+                expect(function () {
+                    ns.pick({
+                        units: []
+                    });
+                }).toThrow();
             });
 
             it("must accept valid unit names", function() {

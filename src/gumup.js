@@ -360,28 +360,24 @@
     // Iterate over `settings.unit`, executing a `pickUnit` function for each
     // item
     function pickUnits(dest, settings) {
-        var units = settings.units || [];
+        var units = settings.units;
         if (!isArray(units)) {
             throw error("Invalid units array in pick settings");
         }
-        var len = units.length;
-        // if the `units` isn't used the `namespace` parameter can be omitted
-        if (len > 0) {
-            if (!(settings.namespace instanceof Gumup)) {
-                throw error("Invalid namespace in pick settings");
+        if (!(settings.namespace instanceof Gumup)) {
+            throw error("Invalid namespace in pick settings");
+        }
+        var picked = {},
+            srcDecls = settings.namespace._declarations;
+        for (var i = 0, len = units.length; i < len; i++) {
+            var reqName = units[i];
+            if (!checkRequireName(reqName)) {
+                throw error("Invalid unit name '" + reqName
+                        + "' in pick settings");
             }
-            var picked = {},
-                srcDecls = settings.namespace._declarations;
-            for (var i = 0; i < len; i++) {
-                var reqName = units[i];
-                if (!checkRequireName(reqName)) {
-                    throw error("Invalid unit name '" + reqName
-                            + "' in pick settings");
-                }
-                forEach(srcDecls, reqName, function(depName) {
-                    pickUnit(srcDecls, dest._declarations, depName, picked, {});
-                });
-            }
+            forEach(srcDecls, reqName, function(depName) {
+                pickUnit(srcDecls, dest._declarations, depName, picked, {});
+            });
         }
     }
 
