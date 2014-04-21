@@ -57,7 +57,7 @@
          *         For example, the mask `foo.*` matches all the nested units
          *         of `foo` unit (except the `foo` unit). If the unit depends
          *         on all existing units, the mask `*` can be used.
-         * @return  {Gumup~Declaration}
+         * @return  {Declaration}
          *          Itself.
          */
         Declaration.prototype.require = function(reqName) {
@@ -128,26 +128,51 @@
     };
 
     /**
-     * Dependency injections settings.
+     * Description of the injection. The contents of the injection can be a unit
+     * declaration or any value.
      *
-     * @namespace  Gumup~pickDependency
+     * @namespace  Gumup~injection
+     * @property  {string} name
+     *            New unit name that'll be assigned to injected object.
      * @property  {string} unit
-     *            Unit name that'll be assigned to injected object.
-     * @property  {*} implementation
-     *            Any object that'll be injected. If it is string, then object
-     *            will be picked from the picked namespace.
+     *            Unit declaration that will be injected from the source
+     *            namespace (without its dependencies).
+     * @property  {*} value
+     *            Any object or primitive that'll be injected.
      */
+
+    /**
+     * Inject settings.
+     *
+     * @namespace  Gumup~injectSettings
+     * @property  {Gumup} [namespace]
+     *            Source namespace.
+     * @property  {Gumup~injection[]} injections
+     *            List of the injections.
+     */
+
+    /**
+     * Inject objects as namespace declarations.
+     *
+     * @param  {Gumup~injectSettings} settings
+     *         Inject settings.
+     * @return  {Gumup}
+     *          Itself.
+     */
+    Gumup.prototype.inject = function(settings) {
+        injectObjects(this, settings);
+        return this;
+    };
 
     /**
      * Pick settings.
      *
      * @namespace  Gumup~pickSettings
-     * @property  {Gumup} [namespace]
-     *            Picked namespace.
-     * @property  {string[]} [units]
-     *            Unit names to be picked. {@link Declaration#require}
-     * @property  {Gumup~pickDependency[]} [dependecies]
-     *            Dependencies to be injected.
+     * @property  {Gumup} namespace
+     *            Source namespace.
+     * @property  {string[]} units
+     *            Names of the units that'll be copied with their dependencies.
+     *            {@link Declaration#require}
      */
 
     /**
@@ -161,7 +186,6 @@
      */
     Gumup.prototype.pick = function(settings) {
         pickUnits(this, settings);
-        pickDependencies(this, settings);
         return this;
     };
 
@@ -172,7 +196,7 @@
      *         Unit name.
      * @param  {Gumup~implementation} implementation
      *         Initialization function.
-     * @return  {Gumup~Declaration}
+     * @return  {Gumup.Declaration}
      *          Unit declaration.
      */
     Gumup.prototype.unit = function(name, implementation) {
@@ -258,49 +282,56 @@
         return Object.prototype.toString.call(obj) == "[object Array]";
     }
 
-    // Pick dependencies
-    // -----------------
+    // Namespace extension
+    // -------------------
 
-    // Iterate over `settings.dependencies`, injecting each dependency
-    function pickDependencies(dest, settings) {
-        var dependencies = settings.dependencies || [];
-        if (!isArray(dependencies)) {
-            throw error("Invalid dependencies array in pick settings");
+    // Iterate over `settings.injections`, doing each injection
+    function injectObjects(dest, settings) {
+        var injections = settings.injections;
+        if (!isArray(injections)) {
+            throw error("Invalid injections array in inject settings");
         }
         var destDecls = dest._declarations;
-        for (var i = 0, len = dependencies.length; i < len; i++) {
-            var dependency = dependencies[i];
-            if (typeof dependency != "object") {
-                throw error("Invalid dependencies in pick settings");
+        for (var i = 0, len = injections.length; i < len; i++) {
+            var injection = injections[i];
+            if (typeof injection != "object") {
+                throw error("Invalid injection [" + i + "] in inject settings");
             }
-            var destName = dependency.name;
+            var destName = injection.name;
             if (!checkUnitName(destName)) {
-                throw error("Invalid dependency name '"
-                        + destName + "' in pick settings");
+                throw error("Invalid injection name '"
+                        + destName + "' [" + i + "] in inject settings");
             }
-            if (typeof dependency.implementation == "string") {
-                // Copy unit declaration with new name and without its
-                // dependencies
+            if (injection.unit != null && injection.value !== undefined) {
+                throw error("Unit and value can't be used together [" + i
+                        + "] in inject settings");
+            }
+            if (injection.unit != null) {
+                // Copy unit declaration
                 if (!(settings.namespace instanceof Gumup)) {
-                    throw error("Invalid namespace in pick settings");
+                    throw error("Invalid namespace in inject settings");
                 }
-                if (!checkUnitName(dependency.implementation)) {
-                    throw error("Invalid dependency implementation'"
-                            + dependency.implementation + "'");
+                var srcName = injection.unit;
+                if (!checkUnitName(srcName)) {
+                    throw error("Invalid unit name '" + srcName
+                        + "' [" + i + "] in inject settings");
                 }
                 var srcDecls = settings.namespace._declarations;
-                var srcName = dependency.implementation;
                 if (srcDecls[srcName] == null) {
-                    throw error("Invalid dependency '" + srcName + "'");
+                    throw error("Unresolvable unit declaration '" + srcName
+                            + "' [" + i + "] in inject settigs");
                 }
                 destDecls[destName] = srcDecls[srcName];
-            } else {
-                // Inject object as new object declaration
+            } else if (injection.value !== undefined) {
+                // Inject object as new declaration
                 destDecls[destName] = new dest.Declaration((function(obj) {
                     return function() {
                         return obj;
                     };
-                })(dependency.implementation));
+                })(injection.value));
+            } else {
+                throw error("Invalid injection object [" + i
+                        + "] in inject settings");
             }
         }
     }

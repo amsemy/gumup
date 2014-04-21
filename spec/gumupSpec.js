@@ -400,6 +400,288 @@
 
         });
 
+        describe("gumup.inject", function() {
+
+            var ns, other;
+
+            beforeEach(function() {
+                ns = new gumup.constructor();
+                other = new gumup.constructor();
+            });
+
+            it("must do the injections", function() {
+                other.unit('aaa', defaultImpl("AAA"));
+                other.unit('bbb', customImpl("BBB"));
+                other.unit("ccc", customImpl("CCC"));
+
+                //------------------------------------------------------------
+                ns.inject({
+                    injections: []
+                });
+                ns.init();
+
+                expect(ns.units).toEqual({});
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+
+                ns.inject({
+                    namespace: other,
+                    injections: [
+                        {
+                            name: "test.aaa",
+                            unit: "aaa"
+                        },
+                        {
+                            name: "test.bbb",
+                            unit: "bbb"
+                        },
+                        {
+                            name: "test.ccc",
+                            unit: "ccc"
+                        }
+                    ]
+                });
+                ns.init();
+
+                expect(ns.units.test.aaa.value).toBe("AAA");
+                expect(ns.units.test.bbb.value).toBe("BBB");
+                expect(ns.units.test.ccc.value).toBe("CCC");
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+
+                ns.inject({
+                    injections: [
+                        {
+                            name: "ddd",
+                            value: {
+                                value: "DDD"
+                            }
+                        },
+                        {
+                            name: "eee",
+                            value: 123
+                        }
+                    ]
+                });
+                ns.init();
+
+                expect(ns.units.ddd.value).toBe("DDD");
+                expect(ns.units.eee).toBe(123);
+            });
+
+            it("must check the injection settings", function() {
+                expect(function () {
+                    ns.inject({});
+                }).toThrow();
+                expect(function () {
+                    ns.inject({
+                        namespace: other
+                    });
+                }).toThrow();
+            });
+
+            it("must check the injecton list in the settings", function() {
+                expect(function () {
+                    ns.inject({
+                        injections: 123
+                    });
+                }).toThrow();
+                expect(function () {
+                    ns.inject({
+                        injections: "aaa"
+                    });
+                }).toThrow();
+                expect(function () {
+                    ns.inject({
+                        injections: {}
+                    });
+                }).toThrow();
+                expect(function () {
+                    ns.inject({
+                        injections: function () {
+                        }
+                    });
+                }).toThrow();
+            });
+
+            it("must check the object in the settings", function() {
+                other.unit('aaa', function() {});
+
+                expect(function () {
+                    ns.inject({
+                        namespace: other,
+                        injections: [
+                            {
+                                name: 'test.aaa'
+                            }
+                        ]
+                    });
+                }).toThrow();
+                expect(function () {
+                    ns.inject({
+                        namespace: other,
+                        injections: [
+                            {
+                                name: 'test.aaa',
+                                unit: 'aaa',
+                                value: {}
+                            }
+                        ]
+                    });
+                }).toThrow();
+            });
+
+            it("must accept valid unit names", function() {
+                var i, len, name;
+
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
+                    other.unit(name, function() {});
+                }
+
+                //------------------------------------------------------------
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
+                    expect(function() {
+                        ns.inject({
+                            injections: [
+                                {
+                                    name: name,
+                                    value: {}
+                                }
+                            ]
+                        });
+                    }).not.toThrow();
+                }
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
+                    expect(function() {
+                        ns.inject({
+                            injections: [
+                                {
+                                    name: name,
+                                    value: {}
+                                }
+                            ]
+                        });
+                    }).toThrow();
+                }
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
+                    expect(function() {
+                        ns.inject({
+                            injections: [
+                                {
+                                    name: name,
+                                    value: {}
+                                }
+                            ]
+                        });
+                    }).toThrow();
+                }
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
+                    expect(function() {
+                        ns.inject({
+                            injections: [
+                                {
+                                    name: name,
+                                    value: {}
+                                }
+                            ]
+                        });
+                    }).toThrow();
+                }
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+
+                for (i = 0, len = validNames.length; i < len; i++) {
+                    name = validNames[i];
+                    expect(function() {
+                        ns.inject({
+                            namespace: other,
+                            injections: [
+                                {
+                                    name: "V" + i,
+                                    unit: name
+                                }
+                            ]
+                        });
+                    }).not.toThrow();
+                }
+                for (i = 0, len = requiredNames.length; i < len; i++) {
+                    name = requiredNames[i];
+                    expect(function() {
+                        ns.inject({
+                            namespace: other,
+                            injections: [
+                                {
+                                    name: "R" + i,
+                                    unit: name
+                                }
+                            ]
+                        });
+                    }).toThrow();
+                }
+                for (i = 0, len = invalidNames.length; i < len; i++) {
+                    name = invalidNames[i];
+                    expect(function() {
+                        ns.inject({
+                            namespace: other,
+                            injections: [
+                                {
+                                    name: "I" + i,
+                                    unit: name
+                                }
+                            ]
+                        });
+                    }).toThrow();
+                }
+                for (i = 0, len = objectNames.length; i < len; i++) {
+                    name = objectNames[i];
+                    if (name == null) {
+                        continue;
+                    }
+                    expect(function() {
+                        ns.inject({
+                            namespace: other,
+                            injections: [
+                                {
+                                    name: "I" + i,
+                                    unit: name
+                                }
+                            ]
+                        });
+                    }).toThrow();
+                }
+            });
+
+            it("must catch nonexistent units", function() {
+                expect(function() {
+                    ns.inject({
+                        namespace: ns,
+                        injections: [
+                            {
+                                name: 'test.aaa',
+                                unit: 'aaa'
+                            }
+                        ]
+                    });
+                }).toThrow();
+            });
+
+            it("must return itself", function() {
+                var actual = ns.inject({
+                    injections: []
+                });
+                expect(actual).toBe(ns);
+            });
+
+        });
+
         describe("gumup.pick", function() {
 
             var ns, other;
@@ -598,75 +880,6 @@
                 expect(other.units.jjj.value).toBe("JJJ");
             });
 
-            it("must inject the dependencies", function() {
-                ns.unit('aaa', defaultImpl("AAA"));
-                ns.unit('bbb', customImpl("BBB"));
-                ns.unit("ccc", customImpl("CCC"));
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                other.pick({});
-                other.init();
-
-                expect(other.units).toEqual({});
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                other.pick({
-                    dependencies: []
-                });
-                other.init();
-
-                expect(other.units).toEqual({});
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                other.pick({
-                    namespace: ns,
-                    dependencies: [
-                        {
-                            name: "test.aaa",
-                            implementation: "aaa"
-                        },
-                        {
-                            name: "test.bbb",
-                            implementation: "bbb"
-                        },
-                        {
-                            name: "test.ccc",
-                            implementation: "ccc"
-                        }                    ]
-                });
-                other.init();
-
-                expect(other.units.test.aaa.value).toBe("AAA");
-                expect(other.units.test.bbb.value).toBe("BBB");
-                expect(other.units.test.ccc.value).toBe("CCC");
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                other.pick({
-                    dependencies: [
-                        {
-                            name: "ddd",
-                            implementation: {
-                                value: "DDD"
-                            }
-                        },
-                        {
-                            name: "eee",
-                            implementation: 123
-                        }
-                    ]
-                });
-                other.init();
-
-                expect(other.units.ddd.value).toBe("DDD");
-                expect(other.units.eee).toBe(123);
-            });
-
             it("must accept valid unit names", function() {
                 var i, len, name;
 
@@ -737,155 +950,6 @@
                             units: [name]
                         });
                     }).toThrow();
-                }
-            });
-
-            it("must accept valid dependency names", function() {
-                var i, len, name;
-
-                for (i = 0, len = validNames.length; i < len; i++) {
-                    name = validNames[i];
-                    ns.unit(name, function() {});
-                }
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                expect(function() {
-                    other.pick({
-                        dependencies: 123
-                    });
-                }).toThrow();
-                expect(function() {
-                    other.pick({
-                        dependencies: "aaa"
-                    });
-                }).toThrow();
-                expect(function() {
-                    other.pick({
-                        dependencies: {}
-                    });
-                }).toThrow();
-                expect(function() {
-                    other.pick({
-                        dependencies: function() {}
-                    });
-                }).toThrow();
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                for (i = 0, len = validNames.length; i < len; i++) {
-                    name = validNames[i];
-                    expect(function() {
-                        other.pick({
-                            dependencies: [
-                                {
-                                    name: name,
-                                    implementation: {}
-                                }
-                            ]
-                        });
-                    }).not.toThrow();
-                }
-                for (i = 0, len = requiredNames.length; i < len; i++) {
-                    name = requiredNames[i];
-                    expect(function() {
-                        other.pick({
-                            dependencies: [
-                                {
-                                    name: name,
-                                    implementation: {}
-                                }
-                            ]
-                        });
-                    }).toThrow();
-                }
-                for (i = 0, len = invalidNames.length; i < len; i++) {
-                    name = invalidNames[i];
-                    expect(function() {
-                        other.pick({
-                            dependencies: [
-                                {
-                                    name: name,
-                                    implementation: {}
-                                }
-                            ]
-                        });
-                    }).toThrow();
-                }
-                for (i = 0, len = objectNames.length; i < len; i++) {
-                    name = objectNames[i];
-                    expect(function() {
-                        other.pick({
-                            dependencies: [
-                                {
-                                    name: name,
-                                    implementation: {}
-                                }
-                            ]
-                        });
-                    }).toThrow();
-                }
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                for (i = 0, len = validNames.length; i < len; i++) {
-                    name = validNames[i];
-                    expect(function() {
-                        other.pick({
-                            namespace: ns,
-                            dependencies: [
-                                {
-                                    name: "V" + i,
-                                    implementation: name
-                                }
-                            ]
-                        });
-                    }).not.toThrow();
-                }
-                for (i = 0, len = requiredNames.length; i < len; i++) {
-                    name = requiredNames[i];
-                    expect(function() {
-                        other.pick({
-                            namespace: ns,
-                            dependencies: [
-                                {
-                                    name: "R" + i,
-                                    implementation: name
-                                }
-                            ]
-                        });
-                    }).toThrow();
-                }
-                for (i = 0, len = invalidNames.length; i < len; i++) {
-                    name = invalidNames[i];
-                    expect(function() {
-                        other.pick({
-                            namespace: ns,
-                            dependencies: [
-                                {
-                                    name: "I" + i,
-                                    implementation: name
-                                }
-                            ]
-                        });
-                    }).toThrow();
-                }
-                for (i = 0, len = objectNames.length; i < len; i++) {
-                    name = objectNames[i];
-                    expect(function() {
-                        other.pick({
-                            namespace: ns,
-                            dependencies: [
-                                {
-                                    name: "I" + i,
-                                    implementation: name
-                                }
-                            ]
-                        });
-                    }).not.toThrow();
                 }
             });
 
@@ -1008,29 +1072,13 @@
                         units: ['aaa', 'bbb']
                     });
                 }).not.toThrow();
-
-                //------------------------------------------------------------
-                other = new gumup.constructor();
-
-                expect(function() {
-                    other.pick({
-                        namespace: ns,
-                        dependencies: [
-                            {
-                                name: 'test.ccc',
-                                implementation: 'ccc'
-                            }
-                        ]
-                    });
-                }).toThrow();
             });
 
             it("must return itself", function() {
-                ns.unit('aaa', function() {});
                 other = new gumup.constructor();
                 var actual = other.pick({
                     namespace: ns,
-                    units: ['aaa']
+                    units: []
                 });
                 expect(actual).toBe(other);
             });

@@ -50,7 +50,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
 
-    grunt.registerTask('test', ['jasmine:all:build']);
-    grunt.registerTask('default', ['concat', 'uglify', 'jasmine']);
+    grunt.registerTask('make', ['concat', 'uglify']);
+    grunt.registerTask('test', ['jasmine', 'make']);
+    grunt.registerTask('spec', ['jasmine:all:build']);
+
+    grunt.registerTask('default', ['test']);
 
 };
