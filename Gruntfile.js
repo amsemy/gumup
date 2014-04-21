@@ -39,7 +39,8 @@ module.exports = function(grunt) {
             all: {
                 src: 'src/gumup.js',
                 options: {
-                    specs: 'spec/gumupSpec.js'
+                    specs: ['spec/gumupSpec.js'],
+                    version: '1.3.1'
                 }
             }
         }
