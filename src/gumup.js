@@ -1,19 +1,20 @@
 (function() {
 
-    /*
-     *  unitName
-     *      :   IDENTIFIER ( '.' IDENTIFIER )*
-     *      ;
-     *
-     *  requireName
-     *      :   unitName ('.' '*')?
-     *      |   '*'
-     *      ;
-     *
-     *  IDENTIFIER
-     *      :   ('A'..'Z' | 'a'..'z' | '_' | '$') ('A'..'Z' | 'a'..'z' | '0'..'9' | '_'  | '$')*
-     *      ;
-     */
+    // Regular expressions used to check unit names.
+    //
+    // unitName
+    //     :   IDENTIFIER ( '.' IDENTIFIER )*
+    //     ;
+    //
+    // requireName
+    //     :   unitName ('.' '*')?
+    //     |   '*'
+    //     ;
+    //
+    // IDENTIFIER
+    //     :   ('A'..'Z' | 'a'..'z' | '_' | '$') ('A'..'Z' | 'a'..'z' | '0'..'9' | '_'  | '$')*
+    //     ;
+    //
     var unitNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*)$/,
         requireNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*(?:\.\*)?|\*)$/;
 
@@ -68,7 +69,7 @@
             return this;
         };
 
-        // Creates a unit in namespace
+        // Creates a unit in namespace.
         Declaration.prototype._init = function(dest, name) {
             var p = name.lastIndexOf(".");
             var unitDir = (p >= 0 ? name.substring(0, p): "");
@@ -109,20 +110,20 @@
         this.init = initialized;
         this.unit = initialized;
         var cache = {
-            // Declaration dependencies with uncapped `*` mask
+            // Declaration dependencies with uncapped `*` mask.
             dependencies: {},
-            // Units without references
-            outer: {}
+            // Units without references. Will be initialized last.
+            root: {}
         };
         var d, resolved = {}, inited = {};
         for (d in this._declarations) {
             cache.dependencies[d] = [];
-            cache.outer[d] = true;
+            cache.root[d] = true;
         }
         for (d in this._declarations) {
             resolve(this._declarations, d, cache, resolved, {});
         }
-        for (d in cache.outer) {
+        for (d in cache.root) {
             initialize(this, this._declarations, d, cache, inited);
         }
     };
@@ -230,16 +231,16 @@
     }
 
     // Iterate over declarations, executing a callback function for each matched
-    // dependency
+    // dependency.
     function forEach(declarations, reqName, callback) {
         var d;
         if (reqName == "*") {
-            // Iterate over all declarations
+            // Iterate over all declarations.
             for (d in declarations) {
                 callback.call(this, d);
             }
         } else if (reqName.charAt(reqName.length - 1) == "*") {
-            // Iterate over uncapped `*` declarations
+            // Iterate over uncapped `*` declarations.
             var baseName = reqName.substring(0, reqName.length - 1);
             for (d in declarations) {
                 if (d.indexOf(baseName) == 0) {
@@ -247,7 +248,7 @@
                 }
             }
         } else {
-            // A single dependency iteration
+            // A single dependency iteration.
             if (declarations[reqName]) {
                 callback.call(this, reqName);
             } else {
@@ -256,7 +257,7 @@
         }
     }
 
-    // Creates a valid path to the unit in the namespace
+    // Creates a valid path to the unit in the namespace.
     function mkdir(units, name) {
         if (name != "") {
             var parts = name.split(".");
@@ -285,7 +286,7 @@
     // Namespace extension
     // -------------------
 
-    // Iterate over `settings.injections`, doing each injection
+    // Iterate over `settings.injections`, doing each injection.
     function injectObjects(dest, settings) {
         var injections = settings.injections;
         if (!isArray(injections)) {
@@ -307,7 +308,7 @@
                         + "] in inject settings");
             }
             if (injection.unit != null) {
-                // Copy unit declaration
+                // Copy unit declaration.
                 if (!(settings.namespace instanceof Gumup)) {
                     throw error("Invalid namespace in inject settings");
                 }
@@ -323,7 +324,7 @@
                 }
                 destDecls[destName] = srcDecls[srcName];
             } else if (injection.value !== undefined) {
-                // Inject object as new declaration
+                // Inject object as new declaration.
                 destDecls[destName] = new dest.Declaration((function(obj) {
                     return function() {
                         return obj;
@@ -336,7 +337,7 @@
         }
     }
 
-    // Copy unit declaration and its dependencies
+    // Copy unit declaration and its dependencies.
     function pickUnit(srcDecls, destDecls, name, picked, stack) {
         var decl = srcDecls[name];
         if (!picked[name]) {
@@ -358,7 +359,7 @@
     }
 
     // Iterate over `settings.unit`, executing a `pickUnit` function for each
-    // item
+    // item.
     function pickUnits(dest, settings) {
         var units = settings.units;
         if (!isArray(units)) {
@@ -384,28 +385,28 @@
     // Initialization
     // --------------
 
-    // Dummy to avoid namespace editing in its initialization
+    // Dummy to avoid namespace editing in its initialization.
     function initialized() {
         throw error("Gumup namespace has already been initialized");
     }
 
-    // Create unit in namespace
+    // Create unit in namespace.
     function initialize(dest, declarations, name, cache, inited) {
         var decl = declarations[name];
         if (!inited[name]) {
-            // Create unit dependencies first
+            // Create unit dependencies first.
             var len = cache.dependencies[name].length;
             for (var i = 0; i < len; i++) {
                 initialize(dest, declarations,
                         cache.dependencies[name][i], cache, inited);
             }
-            // Create unit
+            // Create unit.
             decl._init(dest, name);
             inited[name] = true;
         }
     }
 
-    // Check and prepare (uncap `*` mask) unit dependencies
+    // Check and prepare (uncap `*` mask) unit dependencies.
     function resolve(declarations, name, cache, resolved, stack) {
         var decl = declarations[name];
         if (!resolved[name]) {
@@ -417,7 +418,7 @@
                 var reqName = decl._dependencies[i];
                 forEach(declarations, reqName, function(depName) {
                     if (depName != name) {
-                        delete cache.outer[depName];
+                        delete cache.root[depName];
                         cache.dependencies[name].push(depName);
                         resolve(declarations, depName, cache, resolved, stack);
                     }
