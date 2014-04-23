@@ -191,6 +191,36 @@
                 ns = new gumup.constructor();
 
                 expect(ns.solution).toBeUndefined();
+                ns.unit('b', init("B"))
+                    .require('c');
+                ns.unit('d', init("D"));
+                ns.unit('a', init("A"))
+                    .require('d')
+                    .require('b')
+                    .require('c');
+                ns.unit('c', init("C"))
+                    .require('d');
+                ns.init();
+                expect(ns.solution).toBe("DCBA");
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+
+                expect(ns.solution).toBeUndefined();
+                ns.unit('b', init("B"))
+                    .require('c');
+                ns.unit('d', init("D"));
+                ns.unit('a', init("A"))
+                    .require('*');
+                ns.unit('c', init("C"))
+                    .require('d');
+                ns.init();
+                expect(ns.solution).toBe("DCBA");
+
+                //------------------------------------------------------------
+                ns = new gumup.constructor();
+
+                expect(ns.solution).toBeUndefined();
                 ns.unit('c', init("C"))
                     .require('b');
                 ns.unit('b.b3._2', init("_"))
