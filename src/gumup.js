@@ -63,7 +63,7 @@
          */
         Declaration.prototype.require = function(reqName) {
             if (!checkRequireName(reqName)) {
-                throw error("Invalid require name '" + reqName + "'");
+                error("Invalid require name '" + reqName + "'");
             }
             this._dependencies.push(reqName);
             return this;
@@ -79,7 +79,7 @@
             if (obj == null) {
                 obj = {};
             } else if (typeof obj != "object") {
-                throw error("Cann't create unit '" + name
+                error("Cann't create unit '" + name
                         + "' because there is an object on this path");
             }
             dir[unitName] = this._implementation.call(obj, dest.units);
@@ -202,13 +202,13 @@
      */
     Gumup.prototype.unit = function(name, implementation) {
         if (!checkUnitName(name)) {
-            throw error("Invalid unit name '" + name + "'");
+            error("Invalid unit name '" + name + "'");
         }
         if (typeof implementation != "function") {
-            throw error("Invalid implementation of '" + name + "' unit");
+            error("Invalid implementation of '" + name + "' unit");
         }
         if (this._declarations[name]) {
-            throw error("Unit '" + name + "' has already been declared");
+            error("Unit '" + name + "' has already been declared");
         }
         return this._declarations[name] = new this.Declaration(implementation);
     };
@@ -227,7 +227,7 @@
     function error(msg) {
         var err = new Error(msg);
         err.name = "GumupError";
-        return err;
+        throw err;
     }
 
     // Iterate over declarations, executing a callback function for each matched
@@ -252,7 +252,7 @@
             if (declarations[reqName]) {
                 callback.call(this, reqName);
             } else {
-                throw error("Invalid dependency '" + reqName + "'");
+                error("Invalid dependency '" + reqName + "'");
             }
         }
     }
@@ -268,7 +268,7 @@
                 if (units[part] == null) {
                     units[part] = {};
                 } else if (typeof units[part] != "object") {
-                    throw error("Cann't init unit '" + name
+                    error("Cann't init unit '" + name
                             + "' because path element '" + path
                             + "' isn't an object");
                 }
@@ -290,36 +290,36 @@
     function injectObjects(dest, settings) {
         var injections = settings.injections;
         if (!isArray(injections)) {
-            throw error("Invalid injections array in inject settings");
+            error("Invalid injections array in inject settings");
         }
         var destDecls = dest._declarations;
         for (var i = 0, len = injections.length; i < len; i++) {
             var injection = injections[i];
             if (typeof injection != "object") {
-                throw error("Invalid injection [" + i + "] in inject settings");
+                error("Invalid injection [" + i + "] in inject settings");
             }
             var destName = injection.name;
             if (!checkUnitName(destName)) {
-                throw error("Invalid injection name '"
+                error("Invalid injection name '"
                         + destName + "' [" + i + "] in inject settings");
             }
             if (injection.unit != null && injection.value !== undefined) {
-                throw error("Unit and value can't be used together [" + i
+                error("Unit and value can't be used together [" + i
                         + "] in inject settings");
             }
             if (injection.unit != null) {
                 // Copy unit declaration.
                 if (!(settings.namespace instanceof Gumup)) {
-                    throw error("Invalid namespace in inject settings");
+                    error("Invalid namespace in inject settings");
                 }
                 var srcName = injection.unit;
                 if (!checkUnitName(srcName)) {
-                    throw error("Invalid unit name '" + srcName
-                        + "' [" + i + "] in inject settings");
+                    error("Invalid unit name '" + srcName
+                            + "' [" + i + "] in inject settings");
                 }
                 var srcDecls = settings.namespace._declarations;
                 if (srcDecls[srcName] == null) {
-                    throw error("Unresolvable unit declaration '" + srcName
+                    error("Unresolvable unit declaration '" + srcName
                             + "' [" + i + "] in inject settigs");
                 }
                 destDecls[destName] = srcDecls[srcName];
@@ -331,7 +331,7 @@
                     };
                 })(injection.value));
             } else {
-                throw error("Invalid injection object [" + i
+                error("Invalid injection object [" + i
                         + "] in inject settings");
             }
         }
@@ -342,7 +342,7 @@
         var decl = srcDecls[name];
         if (!picked[name]) {
             if (stack[name]) {
-                throw error("Recursive dependency '" + name + "'");
+                error("Recursive dependency '" + name + "'");
             }
             stack[name] = true;
             for (var i = 0, len = decl._dependencies.length; i < len; i++) {
@@ -363,18 +363,17 @@
     function pickUnits(dest, settings) {
         var units = settings.units;
         if (!isArray(units)) {
-            throw error("Invalid units array in pick settings");
+            error("Invalid units array in pick settings");
         }
         if (!(settings.namespace instanceof Gumup)) {
-            throw error("Invalid namespace in pick settings");
+            error("Invalid namespace in pick settings");
         }
         var picked = {},
             srcDecls = settings.namespace._declarations;
         for (var i = 0, len = units.length; i < len; i++) {
             var reqName = units[i];
             if (!checkRequireName(reqName)) {
-                throw error("Invalid unit name '" + reqName
-                        + "' in pick settings");
+                error("Invalid unit name '" + reqName + "' in pick settings");
             }
             forEach(srcDecls, reqName, function(depName) {
                 pickUnit(srcDecls, dest._declarations, depName, picked, {});
@@ -387,7 +386,7 @@
 
     // Dummy to avoid namespace editing in its initialization.
     function initialized() {
-        throw error("Gumup namespace has already been initialized");
+        error("Gumup namespace has already been initialized");
     }
 
     // Create unit in namespace.
@@ -411,7 +410,7 @@
         var decl = declarations[name];
         if (!resolved[name]) {
             if (stack[name]) {
-                throw error("Recursive dependency '" + name + "'");
+                error("Recursive dependency '" + name + "'");
             }
             stack[name] = true;
             for (var i = 0, len = decl._dependencies.length; i < len; i++) {
