@@ -19,74 +19,74 @@
         requireNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*(?:\.\*)?|\*)$/;
 
     /**
+     * Initialize the unit. When it's called the context will be set to a
+     * existing (or auto-created) unit. If it return a value, the value will
+     * be used as the unit.
+     *
+     * @callback  Gumup~implementation
+     * @param  {Gumup#units} units
+     *         The hash of initialized units.
+     * @returns  {object}
+     *           The initialized unit.
+     */
+
+    /**
+     * Create a unit declaration.
+     *
+     * @constructor
+     * @param  {Gumup~implementation} implementation
+     *         The function of unit initialization.
+     */
+    var Declaration = function(implementation) {
+        this._dependencies = [];
+        this._implementation = implementation;
+    };
+
+    /**
+     * Add a dependency on another unit.
+     *
+     * @param  {string} reqName
+     *         A dependent unit name. It supports masks using `*` symbol.
+     *         For example, the mask `foo.*` matches all the nested units
+     *         of `foo` unit (except the `foo` unit). If the unit depends
+     *         on all existing units, the mask `*` can be used.
+     * @return  {Declaration}
+     *          Itself.
+     */
+    Declaration.prototype.require = function(reqName) {
+        if (!checkRequireName(reqName)) {
+            error("Invalid require name '" + reqName + "'");
+        }
+        this._dependencies.push(reqName);
+        return this;
+    };
+
+    // Creates a unit in namespace.
+    Declaration.prototype._init = function(dest, name) {
+        var p = name.lastIndexOf(".");
+        var unitDir = (p >= 0 ? name.substring(0, p): "");
+        var unitName = (p >= 0 ? name.substring(p + 1): name);
+        var dir = mkdir(dest.units, unitDir);
+        var obj = dir[unitName];
+        if (obj == null) {
+            obj = {};
+        } else if (typeof obj != "object") {
+            error("Cann't create unit '" + name
+                    + "' because there is an object on this path");
+        }
+        dir[unitName] = this._implementation.call(obj, dest.units);
+        if (dir[unitName] == null) {
+            dir[unitName] = obj;
+        }
+    };
+
+    /**
      * Create a Gumup namespace. The namespace consist of units which can be
      * anything: modules, objects, constructors, primitives.
      *
      * @constructor
      */
     var Gumup = function() {
-
-        /**
-         * Initialize the unit. When it's called the context will be set to a
-         * existing (or auto-created) unit. If it return a value, the value will
-         * be used as the unit.
-         *
-         * @callback  Gumup~implementation
-         * @param  {Gumup#units} units
-         *         The hash of initialized units.
-         * @returns  {object}
-         *           The initialized unit.
-         */
-
-        /**
-         * Create a unit declaration.
-         *
-         * @constructor
-         * @param  {Gumup~implementation} implementation
-         *         The function of unit initialization.
-         */
-        var Declaration = this.Declaration = function(implementation) {
-            this._dependencies = [];
-            this._implementation = implementation;
-        };
-
-        /**
-         * Add a dependency on another unit.
-         *
-         * @param  {string} reqName
-         *         A dependent unit name. It supports masks using `*` symbol.
-         *         For example, the mask `foo.*` matches all the nested units
-         *         of `foo` unit (except the `foo` unit). If the unit depends
-         *         on all existing units, the mask `*` can be used.
-         * @return  {Declaration}
-         *          Itself.
-         */
-        Declaration.prototype.require = function(reqName) {
-            if (!checkRequireName(reqName)) {
-                error("Invalid require name '" + reqName + "'");
-            }
-            this._dependencies.push(reqName);
-            return this;
-        };
-
-        // Creates a unit in namespace.
-        Declaration.prototype._init = function(dest, name) {
-            var p = name.lastIndexOf(".");
-            var unitDir = (p >= 0 ? name.substring(0, p): "");
-            var unitName = (p >= 0 ? name.substring(p + 1): name);
-            var dir = mkdir(dest.units, unitDir);
-            var obj = dir[unitName];
-            if (obj == null) {
-                obj = {};
-            } else if (typeof obj != "object") {
-                error("Cann't create unit '" + name
-                        + "' because there is an object on this path");
-            }
-            dir[unitName] = this._implementation.call(obj, dest.units);
-            if (dir[unitName] == null) {
-                dir[unitName] = obj;
-            }
-        };
 
         this._declarations = {};
 
@@ -106,7 +106,6 @@
      * order of units depends on dependency resolution.
      */
     Gumup.prototype.init = function() {
-        this.Declaration.prototype.require = initialized;
         this.init = initialized;
         this.unit = initialized;
         var cache = {
@@ -117,6 +116,7 @@
         };
         var d, resolved = {}, inited = {};
         for (d in this._declarations) {
+            this._declarations[d].require = initialized;
             cache.dependencies[d] = [];
             cache.root[d] = true;
         }
@@ -197,7 +197,7 @@
      *         Unit name.
      * @param  {Gumup~implementation} implementation
      *         Initialization function.
-     * @return  {Gumup.Declaration}
+     * @return  {Declaration}
      *          Unit declaration.
      */
     Gumup.prototype.unit = function(name, implementation) {
@@ -210,7 +210,7 @@
         if (this._declarations[name]) {
             error("Unit '" + name + "' has already been declared");
         }
-        return this._declarations[name] = new this.Declaration(implementation);
+        return this._declarations[name] = new Declaration(implementation);
     };
 
     // Helpers
@@ -325,7 +325,7 @@
                 destDecls[destName] = srcDecls[srcName];
             } else if (injection.value !== undefined) {
                 // Inject object as new declaration.
-                destDecls[destName] = new dest.Declaration((function(obj) {
+                destDecls[destName] = new Declaration((function(obj) {
                     return function() {
                         return obj;
                     };
