@@ -12,6 +12,10 @@ var GumupSpy = require('./gumup-spy');
 
 module.exports = function(grunt, fileCache, options) {
 
+    GumupSpy = parseGumupSpy(options.gumupSpy);
+
+    var globals = parseGloabals(options.globals);
+
     var unitCache = [
         {
             fileName: '/h/unitName',
@@ -22,6 +26,8 @@ module.exports = function(grunt, fileCache, options) {
             ]
         }
     ];
+
+    var unitPath = parseUnitPath(options.unitPath);
 
     unitCache.readFile = function(fileName) {
         // TODO: check file exists
@@ -38,6 +44,18 @@ grunt.file.exists
 
         return read(fileName[0]);
     };
+
+    function parseGlobals(globals) {
+        // TODO:
+    }
+
+    function parseGumupSpy(gumupSpy) {
+        return (gumupSpy ? gumupSpy(GumupSpy) || GumupSpy : GumupSpy);
+    }
+
+    function parseUnitPath(unitPath) {
+        // TODO:
+    }
 
     function read(fileName) {
         var enviroment = options.enviroment;
