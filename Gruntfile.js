@@ -43,18 +43,23 @@ module.exports = function(grunt) {
                     version: '1.3.1'
                 }
             }
+        },
+
+        nodeunit: {
+            tests: 'test/node/*.js'
         }
 
     });
 
     grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
+    grunt.loadNpmTasks('grunt-contrib-nodeunit');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
 
     grunt.registerTask('make', ['concat', 'uglify']);
-    grunt.registerTask('test', ['jasmine', 'make']);
+    grunt.registerTask('test', ['nodeunit', 'jasmine']);
     grunt.registerTask('spec', ['jasmine:all:build']);
 
-    grunt.registerTask('default', ['test']);
+    grunt.registerTask('default', ['test', 'make']);
 
 };

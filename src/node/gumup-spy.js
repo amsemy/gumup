@@ -47,7 +47,7 @@ GumupSpy.prototype.unit = function(name, implementation) {
         throw util.declError('Invalid implementation of "' + name + '" unit');
     }
     this._spy.name = name;
-    return new this.Declaration(this._spy);
+    return new Declaration(this._spy);
 };
 
 function checkRequireName(name) {
