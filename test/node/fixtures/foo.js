@@ -1,0 +1,1 @@
+gumup.unit('foo', function() {});

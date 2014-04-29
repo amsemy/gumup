@@ -14,9 +14,12 @@ exports.declError = function(msg) {
     return err;
 };
 
-exports.error = function(msg) {
+exports.error = function(msg, e) {
     var err = new Error(msg);
     err.name = 'GumupError';
+    if (e) {
+        err.origError = e;
+    }
     return err;
 };
 

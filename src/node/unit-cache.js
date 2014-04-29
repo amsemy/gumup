@@ -13,7 +13,7 @@ var path = require('path');
 var fs = require('fs');
 var util = require('./util');
 
-module.exports = function(grunt, fileCache, options) {
+module.exports = function(options) {
 
     // Current work dir.
     var cwd;
@@ -50,26 +50,27 @@ module.exports = function(grunt, fileCache, options) {
     var unitCache = [];
 
     unitCache.readFile = function(fileName) {
-        return read(fileName);
+        var file = path.resolve(cwd, fileName);
+        return read(file);
     };
 
     unitCache.readUnit = function(name) {
         var fileName = name.split('.').join(path.sep) + '.js';
-        var fileNames = [];
+        var files = [];
         for (var i = 0, il = unitPath.length; i < il; i++) {
             var file = path.resolve(cwd, unitPath[i], fileName);
             if (fs.existsSync(file)) {
-                fileNames.push(file);
+                files.push(file);
             }
         }
-        if (!fileNames.length) {
+        if (!files.length) {
             throw util.error('Unable to find "' + name
                     + '" unit in the unit path');
-        } else if (fileNames.length > 1) {
+        } else if (files.length > 1) {
             throw util.error('Too many files in the unit path for "'
                     + name + '" unit');
         }
-        return read(fileNames[0]);
+        return read(files[0]);
     };
 
     parseOptions();
@@ -140,11 +141,13 @@ module.exports = function(grunt, fileCache, options) {
 
         // Collect globals and external dependencies for the unit.
         var externalIds = fileExternals[file];
-        for (var e = 0, el = externalIds.length; e < el; e++) {
-            var external = externals[externalIds[e]];
-            params.push.apply(params, external.globals);
-            if (external.name) {
-                externalDeps.push(name);
+        if (externalIds) {
+            for (var e = 0, el = externalIds.length; e < el; e++) {
+                var external = externals[externalIds[e]];
+                params.push.apply(params, external.globals);
+                if (external.name) {
+                    externalDeps.push(name);
+                }
             }
         }
 
@@ -152,7 +155,7 @@ module.exports = function(grunt, fileCache, options) {
         try {
             var unitBody = fs.readFileSync(file, encoding);
         } catch (e) {
-            throw util.error('Unable to read "' + file + '" file');
+            throw util.error('Unable to read "' + file + '" file', e);
         }
 
         // Read declaration from the unit body.
@@ -162,7 +165,12 @@ module.exports = function(grunt, fileCache, options) {
         };
         params.push('gumup');
         values.push(new GumupSpy(declaration));
-        Function.apply(null, params.push(unitBody)).apply(null, values);
+        params.push(unitBody);
+        try {
+            Function.apply(null, params).apply(null, values);
+        } catch (e) {
+            throw util.error('Unable to parse "' + file + '" file', e);
+        }
 
         return unitCache.push(declaration) - 1;
     }
