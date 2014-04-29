@@ -11,33 +11,44 @@
 var unitCache = require('./unit-cache');
 var gumupNamespace = require('./gumup-namespace');
 
-module.exports = function(options) {
+/**
+ * Lets to use external units in the gumup units.
+ *
+ * @namespace  GumupOptions~externals
+ * @property  {string[]} [globals]
+ *            Global variables that are occuped by the external unit.
+ * @property  {string[]} [files]
+ *            Files of the external unit.
+ * @property  {string[]} dependent
+ *            Gumup unit files that depends from this unit.
+ */
 
-    //  options: {
-    //      globals: [
-    //          {
-    //              name: 'foo'
-    //              files: 'third-party/foo-1.0.js',
-    //              dependent: [
-    //                  'src/lib/foo.js',
-    //                  'src/main.js'
-    //              ]
-    //          },
-    //          {
-    //              name: 'bar'
-    //              files: [
-    //                  'third-party/bar-1.0.js'
-    //                  'third-party/bar.plugin-1.0.js'
-    //              ],
-    //              dependent: 'src/lib/bar.js'
-    //          }
-    //      ],
-    //      gumupSpy: function(Gumup) {
-    //          Gumup.prototype.constr = Gumup.prototype.unit;
-    //          Gumup.prototype.object = Gumup.prototype.unit;
-    //      },
-    //      unitPath: ['src']
-    //  }
+/**
+ * Is used to extend the Gumup functionality.
+ *
+ * @callback  GumupOptions~gumupSpy
+ * TODO: @param  {Function} GumupSpy
+ *         The base implementation.
+ * TODO: @returns  {undefined|Function}
+ *
+ */
+
+/**
+ * @namespace  GumupOptions
+ * @property  {string} [cwd]
+ *            Current work dir.
+ * @property  {string} [encoding='utf-8']
+ *            Unit files encoding.
+ * @property  {GumupOptions~externals[]} [externals]
+ *            External units description.
+ * @property  {GumupOptions~gumupSpy} [gumupSpy]
+ *            Constructor of the GumupSpy, used to parse the Gumup units.
+ * @property  {string[]} [unitPath]
+ *            Paths that are used to find the Gumup units (absolute or relative
+ *            to `cwd`).
+ */
+
+module.exports = function(options) {
 
     var unitCache = unitCache();
 

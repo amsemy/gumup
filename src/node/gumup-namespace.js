@@ -27,7 +27,7 @@ Namespace.prototype.resolve = function() {
 
     loadNamespace(namespace, units, unitCache);
 
-    for (var i = 0, len = units.length; i < len; i++) {
+    for (var i = 0, il = units.length; i < il; i++) {
         var queue = [units[i]];
         var stack = [];
         var direction = true;
@@ -46,7 +46,7 @@ Namespace.prototype.resolve = function() {
                 if (direction) {
                     queue.unshift(deps);
                 }
-                for (var s = 0, sLen = stack.length; s < sLen; s++) {
+                for (var s = 0, sl = stack.length; s < sl; s++) {
                     if (stack[s] === unit) {
                         error('Recursive dependency'); // TODO: print stack
                     }
@@ -72,13 +72,13 @@ function getDependencies(unit, unitCache, namespace, processed) {
     var deps = unitCache[unit].dependencies;
     var result = [];
     // Iterate over all unit dependencies.
-    for (var i = 0, iLen = deps.length; i < iLen; i++) {
+    for (var i = 0, il = deps.length; i < il; i++) {
         var reqName = deps[i];
-        var depUnit, j, jLen;
+        var depUnit, j, jl;
         if (reqName.charAt(reqName.length - 1) == "*") {
             // Iterate over uncapped `*` declarations.
             var baseName = reqName.substring(0, reqName.length - 1);
-            for (j = 0, jLen = namespace.length; j < jLen; j++) {
+            for (j = 0, jl = namespace.length; j < jl; j++) {
                 depUnit = namespace[j];
                 if (unitCache[depUnit].name.indexOf(baseName) == 0
                         && !processed[depUnit]) {
@@ -87,7 +87,7 @@ function getDependencies(unit, unitCache, namespace, processed) {
             }
         } else {
             // A simple dependency.
-            for (j = 0, jLen = namespace.length; j < jLen; j++) {
+            for (j = 0, jl = namespace.length; j < jl; j++) {
                 depUnit = namespace[j];
                 if (unitCache[depUnit].name === reqName
                         && !processed[depUnit]) {
@@ -101,11 +101,11 @@ function getDependencies(unit, unitCache, namespace, processed) {
 }
 
 function loadNamespace(namespace, units, unitCache) {
-    for (var i = 0, iLen = units.length; i < iLen; i++) {
+    for (var i = 0, il = units.length; i < il; i++) {
         var unit = units[i];
         namespace.push(unit);
         var deps = unitCache[unit].dependencies;
-        for (var j = 0, jLen = deps.length; j < jLen; j++) {
+        for (var j = 0, jl = deps.length; j < jl; j++) {
             // TODO: comment about `*`
             var reqUnit = unitCache.readUnit(deps[j]);
             namespace.push(reqUnit);

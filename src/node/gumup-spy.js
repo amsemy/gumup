@@ -8,6 +8,8 @@
 
 'use strict';
 
+var util = require('./util');
+
 var unitNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*)$/,
     requireNamePattern = /^(?:[A-Za-z_\$][\w\$]*(?:\.[A-Za-z_\$][\w\$]*)*(?:\.\*)?|\*)$/;
 
@@ -17,7 +19,8 @@ var Declaration = function(spy) {
 
 Declaration.prototype.require = function(reqName) {
     if (!checkRequireName(reqName)) {
-        error('Invalid require name "' + reqName + '"');
+        throw util.declError('Invalid require name "' + reqName
+                + '" of "' + this._spy.name + '" unit');
     }
     this._spy.dependencies.push(reqName);
     return this;
@@ -38,13 +41,12 @@ GumupSpy.prototype.pick = function(settings) {};
 
 GumupSpy.prototype.unit = function(name, implementation) {
     if (!checkUnitName(name)) {
-        error('Invalid unit name "' + name + '"');
+        throw util.declError('Invalid unit name "' + name + '"');
     }
     if (typeof implementation != "function") {
-        error('Invalid implementation of "' + name + '" unit');
+        throw util.declError('Invalid implementation of "' + name + '" unit');
     }
     this._spy.name = name;
-    this._spy.dependencies = [];
     return new this.Declaration(this._spy);
 };
 
@@ -54,12 +56,6 @@ function checkRequireName(name) {
 
 function checkUnitName(name) {
     return (name && unitNamePattern.test(name));
-}
-
-function error(msg) {
-    var err = new Error(msg);
-    err.name = 'GumupError';
-    throw err;
 }
 
 module.exports = GumupSpy;
