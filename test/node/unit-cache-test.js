@@ -98,12 +98,13 @@ exports.unitCacheTest = {
                         }
                     ]
                 });
+                var unit;
 
                 test.equal(uc[0].file, path.resolve(cwd, extLibFileName));
                 test.equal(uc[0].name, '#0_0');
                 test.deepEqual(uc[0].dependencies, []);
 
-                var unit = uc.readFile(fooFileName);
+                unit = uc.readFile(fooFileName);
 
                 test.equal(uc[unit].file, path.resolve(cwd, fooFileName));
                 test.equal(uc[unit].name, 'foo');
@@ -126,6 +127,8 @@ exports.unitCacheTest = {
                         }
                     ]
                 });
+                var unit;
+
                 test.equal(uc[0].file, path.resolve(cwd, extLibFileName));
                 test.equal(uc[0].name, '#0_0');
                 test.deepEqual(uc[0].dependencies, []);
@@ -134,7 +137,7 @@ exports.unitCacheTest = {
                 test.equal(uc[1].name, '#0_1');
                 test.deepEqual(uc[1].dependencies, ['#0_0']);
 
-                var unit = uc.readFile(fooFileName);
+                unit = uc.readFile(fooFileName);
 
                 test.equal(uc[unit].file, path.resolve(cwd, fooFileName));
                 test.equal(uc[unit].name, 'foo');
@@ -159,6 +162,7 @@ exports.unitCacheTest = {
                         }
                     ]
                 });
+                var unit;
 
                 test.equal(uc[0].file, path.resolve(cwd, extLibFileName));
                 test.equal(uc[0].name, '#0_0');
@@ -168,7 +172,7 @@ exports.unitCacheTest = {
                 test.equal(uc[1].name, '#0_1');
                 test.deepEqual(uc[1].dependencies, ['#0_0']);
 
-                var unit = uc.readFile(fooFileName);
+                unit = uc.readFile(fooFileName);
 
                 test.equal(uc[unit].file, path.resolve(cwd, fooFileName));
                 test.equal(uc[unit].name, 'foo');
@@ -223,6 +227,41 @@ exports.unitCacheTest = {
                 });
                 var unit = uc.readFile('baz.js');
                 test.equal(uc[unit].name, 'baz');
+                test.done();
+            }
+
+        },
+
+        'GumupOptions~unitPath': {
+
+            'default value': function(test) {
+                var cwd = 'test/node/fixtures/options';
+                var uc = UnitCache({
+                    cwd: cwd
+                });
+                var unit = uc.readUnit('foo');
+                test.equal(uc[unit].file, path.resolve(cwd, 'foo.js'));
+                test.done();
+            },
+
+            'specified value': function(test) {
+                var optionsPath = 'test/node/fixtures/options',
+                    samplePath = 'test/node/fixtures/sample';
+                var uc = UnitCache({
+                    unitPath: [optionsPath, samplePath]
+                });
+                var unit;
+
+                unit = uc.readUnit('foo');
+                test.equal(uc[unit].file, path.resolve(optionsPath, 'foo.js'));
+
+                unit = uc.readUnit('main');
+                test.equal(uc[unit].file, path.resolve(samplePath, 'main.js'));
+
+                unit = uc.readUnit('util.dux.dax');
+                test.equal(uc[unit].file, path.resolve(samplePath,
+                        'util/dux/dax.js'));
+
                 test.done();
             }
 
