@@ -271,8 +271,29 @@ exports.unitCacheTest = {
 
     'UnitCache.readFile': {
 
-        'foo': function(test) {
-            test.ok(true);
+        'must read file to the unit cache': function(test) {
+            var cwd = 'test/node/fixtures/sample',
+                fileName = 'main.js';
+            var uc = UnitCache({
+                cwd: cwd
+            });
+            var unit = uc.readFile(fileName);
+            test.equal(uc[unit].file, path.resolve(cwd, fileName));
+            test.equal(uc[unit].name, 'main');
+            test.deepEqual(uc[unit].dependencies, ['util.foo', '*']);
+            test.done();
+        },
+
+        'must use cache for readed files': function(test) {
+            var cwd = 'test/node/fixtures/sample',
+                fileName = 'main.js';
+            var uc = UnitCache({
+                cwd: cwd
+            });
+            uc.readFile(fileName);
+            test.equals(uc.length, 1);
+            uc.readFile(fileName);
+            test.equals(uc.length, 1);
             test.done();
         }
 

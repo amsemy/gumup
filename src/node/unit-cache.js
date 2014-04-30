@@ -52,6 +52,12 @@ module.exports = function(options) {
     //
     var unitCache = [];
 
+    // The Gumup units mapping to the files.
+    //
+    //  '<unit_file_path>': [<unit_id>, ...]
+    //
+    var fileUnits = {};
+
     unitCache.readFile = function(fileName) {
         var file = path.resolve(cwd, fileName);
         return read(file);
@@ -104,18 +110,19 @@ module.exports = function(options) {
 
                 // Convert file list to the chain of fake Gumup units.
                 if (extDesc.files) {
+                    // TODO: lib redeclaration
                     for (var f = 0, fl = extDesc.files.length; f < fl; f++) {
                         var extFile = path.resolve(cwd, extDesc.files[f]);
 
                         // Add the fake unit to the unit cache.
                         var extUnitDeps = (extUnitName ? [extUnitName] : []);
                         extUnitName = '#' + extId + '_' + f;
-                        var extUnit = {
+                        var extDeclaration = {
                             file: extFile,
                             name: extUnitName,
                             dependencies: extUnitDeps
                         };
-                        unitCache.push(extUnit);
+                        add(extDeclaration);
                     }
                     if (extUnitName) {
                         externals[extId].name = extUnitName;
@@ -147,7 +154,18 @@ module.exports = function(options) {
                 ? options.unitPath : ['.']);
     }
 
+    function add(declaration) {
+        var unit = unitCache.push(declaration) - 1;
+        fileUnits[declaration.file] = unit;
+        return unit;
+    }
+
     function read(file) {
+        var unit = fileUnits[file];
+        if (unit != null) {
+            return unit;
+        }
+
         var params = [],
             externalDeps = [];
 
@@ -185,7 +203,7 @@ module.exports = function(options) {
             throw util.error('Unable to parse "' + file + '" file', e);
         }
 
-        return unitCache.push(declaration) - 1;
+        return add(declaration);
     }
 
     return unitCache;
