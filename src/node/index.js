@@ -19,7 +19,7 @@ var gumupNamespace = require('./gumup-namespace');
  *            Global variables that are occuped by the external unit.
  * @property  {string[]} [files]
  *            Files of the external unit.
- * @property  {string[]} dependent
+ * @property  {string[]} usages
  *            Gumup unit files that depends from this unit.
  */
 

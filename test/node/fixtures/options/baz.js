@@ -1,0 +1,1 @@
+gumup.module('baz', function() {});

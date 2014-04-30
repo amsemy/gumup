@@ -15,6 +15,9 @@ var util = require('./util');
 
 module.exports = function(options) {
 
+    // Gumup spy constructor.
+    var Gumup;
+
     // Current work dir.
     var cwd;
 
@@ -78,11 +81,13 @@ module.exports = function(options) {
     function parseOptions() {
         // TODO: check options
 
+        options = options || {};
+
         // Parse CWD.
         cwd = options.cwd || '';
 
         // Parse encoding.
-        encoding = options.encoding || 'utf8';
+        encoding = options.encoding || 'utf-8';
 
         // Parse externals.
         if (options.externals) {
@@ -98,45 +103,52 @@ module.exports = function(options) {
                 }) - 1;
 
                 // Convert file list to the chain of fake Gumup units.
-                for (var f = 0, fl = extDesc.files.length; f < fl; f++) {
-                    var extFile = extDesc.files[f];
+                if (extDesc.files) {
+                    for (var f = 0, fl = extDesc.files.length; f < fl; f++) {
+                        var extFile = path.resolve(cwd, extDesc.files[f]);
 
-                    // Add the fake unit to the unit cache.
-                    var extUnitDeps = (extUnitName ? [extUnitName] : []);
-                    extUnitName = '#' + extId + '_' + f;
-                    var extUnit = {
-                        file: extFile,
-                        name: extUnitName,
-                        dependencies: extUnitDeps
-                    };
-                    unitCache.push(extUnit);
-                }
-                if (extUnitName) {
-                    externals[extId].name = extUnitName;
+                        // Add the fake unit to the unit cache.
+                        var extUnitDeps = (extUnitName ? [extUnitName] : []);
+                        extUnitName = '#' + extId + '_' + f;
+                        var extUnit = {
+                            file: extFile,
+                            name: extUnitName,
+                            dependencies: extUnitDeps
+                        };
+                        unitCache.push(extUnit);
+                    }
+                    if (extUnitName) {
+                        externals[extId].name = extUnitName;
+                    }
                 }
 
                 // Add mapping to the Gumup units.
-                for (var d = 0, dl = extDesc.dependencies.length; d < dl; d++) {
-                    var file = extDesc.dependencies[d];
-                    if (!fileExternals[file]) {
-                        fileExternals[file] = [];
+                if (extDesc.usages && extDesc.usages.length) {
+                    for (var d = 0, dl = extDesc.usages.length; d < dl; d++) {
+                        var file = path.resolve(cwd, extDesc.usages[d]);
+                        if (!fileExternals[file]) {
+                            fileExternals[file] = [];
+                        }
+                        fileExternals[file].push(extId);
                     }
-                    fileExternals[file].push(extId);
+                } else {
+                    throw util.optionsError(
+                            'Invalid using of "externals.usages" property');
                 }
             }
         }
 
         // Parse gumupSpy.
         var gumupSpy = options.gumupSpy;
-        GumupSpy = (gumupSpy ? gumupSpy(GumupSpy) || GumupSpy : GumupSpy);
+        Gumup = (gumupSpy ? gumupSpy(GumupSpy) || GumupSpy : GumupSpy);
 
         // Parse unitPath.
-        unitPath = options.unitPath;
+        unitPath = (options.unitPath && options.unitPath.length
+                ? options.unitPath : ['.']);
     }
 
     function read(file) {
         var params = [],
-            values = [],
             externalDeps = [];
 
         // Collect globals and external dependencies for the unit.
@@ -146,7 +158,7 @@ module.exports = function(options) {
                 var external = externals[externalIds[e]];
                 params.push.apply(params, external.globals);
                 if (external.name) {
-                    externalDeps.push(name);
+                    externalDeps.push(external.name);
                 }
             }
         }
@@ -163,8 +175,9 @@ module.exports = function(options) {
             file: file,
             dependencies: externalDeps
         };
+        var values = params.slice();
         params.push('gumup');
-        values.push(new GumupSpy(declaration));
+        values.push(new Gumup(declaration));
         params.push(unitBody);
         try {
             Function.apply(null, params).apply(null, values);
