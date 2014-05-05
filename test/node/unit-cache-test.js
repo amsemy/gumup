@@ -246,9 +246,9 @@ exports.unitCacheTest = {
 
             'specified value': function(test) {
                 var optionsPath = 'test/node/fixtures/options',
-                    samplePath = 'test/node/fixtures/sample';
+                    readPath = 'test/node/fixtures/read';
                 var uc = UnitCache({
-                    unitPath: [optionsPath, samplePath]
+                    unitPath: [optionsPath, readPath]
                 });
                 var unit;
 
@@ -256,10 +256,10 @@ exports.unitCacheTest = {
                 test.equal(uc[unit].file, path.resolve(optionsPath, 'foo.js'));
 
                 unit = uc.readUnit('main');
-                test.equal(uc[unit].file, path.resolve(samplePath, 'main.js'));
+                test.equal(uc[unit].file, path.resolve(readPath, 'main.js'));
 
                 unit = uc.readUnit('util.dux.dax');
-                test.equal(uc[unit].file, path.resolve(samplePath,
+                test.equal(uc[unit].file, path.resolve(readPath,
                         'util/dux/dax.js'));
 
                 test.done();
@@ -272,7 +272,7 @@ exports.unitCacheTest = {
     'UnitCache.readFile': {
 
         'must read file to the unit cache': function(test) {
-            var cwd = 'test/node/fixtures/sample',
+            var cwd = 'test/node/fixtures/read',
                 fileName = 'main.js';
             var uc = UnitCache({
                 cwd: cwd
@@ -285,7 +285,7 @@ exports.unitCacheTest = {
         },
 
         'must use cache for readed files': function(test) {
-            var cwd = 'test/node/fixtures/sample',
+            var cwd = 'test/node/fixtures/read',
                 fileName = 'main.js';
             var uc = UnitCache({
                 cwd: cwd
@@ -301,8 +301,42 @@ exports.unitCacheTest = {
 
     'UnitCache.readUnit': {
 
-        'bar': function(test) {
-            test.ok(true);
+        'must read file to the unit cache': function(test) {
+            var unitName = 'main',
+                unitPath = 'test/node/fixtures/read';
+            var uc = UnitCache({
+                unitPath: [unitPath]
+            });
+            var unit = uc.readUnit(unitName);
+            test.equal(uc[unit].file, path.resolve(unitPath, 'main.js'));
+            test.equal(uc[unit].name, unitName);
+            test.deepEqual(uc[unit].dependencies, ['util.foo', '*']);
+            test.done();
+        },
+
+        'must use cache for readed files': function(test) {
+            var unitName = 'main',
+                unitPath = 'test/node/fixtures/read';
+            var uc = UnitCache({
+                unitPath: [unitPath]
+            });
+            uc.readUnit(unitName);
+            test.equals(uc.length, 1);
+            uc.readUnit(unitName);
+            test.equals(uc.length, 1);
+            test.done();
+        },
+
+        'must find collisions': function(test) {
+            var uc = UnitCache({
+                unitPath: [
+                    'test/node/fixtures/options',
+                    'test/node/fixtures/read'
+                ]
+            });
+            test.throws(function() {
+                uc.readUnit('baz');
+            });
             test.done();
         }
 
