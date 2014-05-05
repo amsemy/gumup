@@ -8,6 +8,8 @@
 
 'use strict';
 
+var util = require('./util');
+
 var Namespace = function(unitCache) {
     this._units = [];
     this._unitCache = unitCache;
@@ -47,15 +49,15 @@ Namespace.prototype.resolve = function() {
                     queue.unshift(deps);
                 }
                 for (var s = 0, sl = stack.length; s < sl; s++) {
-                    if (stack[s] === unit) {
-                        error('Recursive dependency'); // TODO: print stack
+                    if (stack[s] == unit) {
+                        throw util.error('Recursive dependency'); // TODO: print stack
                     }
                 }
                 stack.push(unit);
                 direction = true;
             } else {
                 processed[unit] = true;
-                result.push(unitCache[unit].fileName);
+                result.push(unitCache[unit].file);
                 direction = false;
                 // Check the exit point.
                 if (!stack.length) {
@@ -75,7 +77,7 @@ function getDependencies(unit, unitCache, namespace, processed) {
     for (var i = 0, il = deps.length; i < il; i++) {
         var reqName = deps[i];
         var depUnit, j, jl;
-        if (reqName.charAt(reqName.length - 1) == "*") {
+        if (reqName.charAt(reqName.length - 1) == '*') {
             // Iterate over uncapped `*` declarations.
             var baseName = reqName.substring(0, reqName.length - 1);
             for (j = 0, jl = namespace.length; j < jl; j++) {
@@ -89,13 +91,13 @@ function getDependencies(unit, unitCache, namespace, processed) {
             // A simple dependency.
             for (j = 0, jl = namespace.length; j < jl; j++) {
                 depUnit = namespace[j];
-                if (unitCache[depUnit].name === reqName
+                if (unitCache[depUnit].name == reqName
                         && !processed[depUnit]) {
                     result.push(depUnit);
                     break;
                 }
             }
-            throw error("Invalid dependency '" + reqName + "'");
+            throw util.error('Invalid dependency "' + reqName + '"');
         }
     }
 }
@@ -106,9 +108,11 @@ function loadNamespace(namespace, units, unitCache) {
         namespace.push(unit);
         var deps = unitCache[unit].dependencies;
         for (var j = 0, jl = deps.length; j < jl; j++) {
-            // TODO: comment about `*`
-            var reqUnit = unitCache.readUnit(deps[j]);
-            namespace.push(reqUnit);
+            var reqName = deps[j];
+            if (reqName.charAt(reqName.length - 1) != '*') {
+                var reqUnit = unitCache.readUnit(reqName);
+                namespace.push(reqUnit);
+            }
         }
     }
 }

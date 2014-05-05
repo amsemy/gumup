@@ -18,13 +18,12 @@ exports.unitCacheTest = {
             },
 
             'specified value': function(test) {
-                var cwd = 'test/node/fixtures/options',
-                    fileName = 'foo.js';
+                var cwd = 'test/node/fixtures/options';
                 var uc = UnitCache({
                     cwd: cwd
                 });
-                var unit = uc.readFile(fileName);
-                test.equal(uc[unit].file, path.resolve(cwd, fileName));
+                var unit = uc.readFile('foo.js');
+                test.equal(uc[unit].file, path.resolve(cwd, 'foo.js'));
                 test.done();
             }
 
@@ -86,27 +85,25 @@ exports.unitCacheTest = {
             },
 
             'files property with one file': function(test) {
-                var cwd = 'test/node/fixtures/options',
-                    fooFileName = 'foo.js',
-                    extLibFileName = 'extLib.js';
+                var cwd = 'test/node/fixtures/options';
                 var uc = UnitCache({
                     cwd: cwd,
                     externals: [
                         {
-                            files: [extLibFileName],
-                            usages: [fooFileName]
+                            files: ['extLib.js'],
+                            usages: ['foo.js']
                         }
                     ]
                 });
                 var unit;
 
-                test.equal(uc[0].file, path.resolve(cwd, extLibFileName));
+                test.equal(uc[0].file, path.resolve(cwd, 'extLib.js'));
                 test.equal(uc[0].name, '#0_0');
                 test.deepEqual(uc[0].dependencies, []);
 
-                unit = uc.readFile(fooFileName);
+                unit = uc.readFile('foo.js');
 
-                test.equal(uc[unit].file, path.resolve(cwd, fooFileName));
+                test.equal(uc[unit].file, path.resolve(cwd, 'foo.js'));
                 test.equal(uc[unit].name, 'foo');
                 test.deepEqual(uc[unit].dependencies, ['#0_0']);
 
@@ -114,32 +111,29 @@ exports.unitCacheTest = {
             },
 
             'files property with many files': function(test) {
-                var cwd = 'test/node/fixtures/options',
-                    fooFileName = 'foo.js',
-                    extLibFileName = 'extLib.js',
-                    otherLibFileName = 'otherLib.js';
+                var cwd = 'test/node/fixtures/options';
                 var uc = UnitCache({
                     cwd: cwd,
                     externals: [
                         {
-                            files: [extLibFileName, otherLibFileName],
-                            usages: [fooFileName]
+                            files: ['extLib.js', 'otherLib.js'],
+                            usages: ['foo.js']
                         }
                     ]
                 });
                 var unit;
 
-                test.equal(uc[0].file, path.resolve(cwd, extLibFileName));
+                test.equal(uc[0].file, path.resolve(cwd, 'extLib.js'));
                 test.equal(uc[0].name, '#0_0');
                 test.deepEqual(uc[0].dependencies, []);
 
-                test.equal(uc[1].file, path.resolve(cwd, otherLibFileName));
+                test.equal(uc[1].file, path.resolve(cwd, 'otherLib.js'));
                 test.equal(uc[1].name, '#0_1');
                 test.deepEqual(uc[1].dependencies, ['#0_0']);
 
-                unit = uc.readFile(fooFileName);
+                unit = uc.readFile('foo.js');
 
-                test.equal(uc[unit].file, path.resolve(cwd, fooFileName));
+                test.equal(uc[unit].file, path.resolve(cwd, 'foo.js'));
                 test.equal(uc[unit].name, 'foo');
                 test.deepEqual(uc[unit].dependencies, ['#0_1']);
 
@@ -147,40 +141,36 @@ exports.unitCacheTest = {
             },
 
             'all properties': function(test) {
-                var cwd = 'test/node/fixtures/options',
-                    fooFileName = 'foo.js',
-                    barFileName = 'bar.js',
-                    extLibFileName = 'extLib.js',
-                    otherLibFileName = 'otherLib.js';
+                var cwd = 'test/node/fixtures/options';
                 var uc = UnitCache({
                     cwd: cwd,
                     externals: [
                         {
                             globals: ['extLib', 'otherLib'],
-                            files: [extLibFileName, otherLibFileName],
-                            usages: [fooFileName, barFileName]
+                            files: ['extLib.js', 'otherLib.js'],
+                            usages: ['foo.js', 'bar.js']
                         }
                     ]
                 });
                 var unit;
 
-                test.equal(uc[0].file, path.resolve(cwd, extLibFileName));
+                test.equal(uc[0].file, path.resolve(cwd, 'extLib.js'));
                 test.equal(uc[0].name, '#0_0');
                 test.deepEqual(uc[0].dependencies, []);
 
-                test.equal(uc[1].file, path.resolve(cwd, otherLibFileName));
+                test.equal(uc[1].file, path.resolve(cwd, 'otherLib.js'));
                 test.equal(uc[1].name, '#0_1');
                 test.deepEqual(uc[1].dependencies, ['#0_0']);
 
-                unit = uc.readFile(fooFileName);
+                unit = uc.readFile('foo.js');
 
-                test.equal(uc[unit].file, path.resolve(cwd, fooFileName));
+                test.equal(uc[unit].file, path.resolve(cwd, 'foo.js'));
                 test.equal(uc[unit].name, 'foo');
                 test.deepEqual(uc[unit].dependencies, ['#0_1']);
 
-                unit = uc.readFile(barFileName);
+                unit = uc.readFile('bar.js');
 
-                test.equal(uc[unit].file, path.resolve(cwd, barFileName));
+                test.equal(uc[unit].file, path.resolve(cwd, 'bar.js'));
                 test.equal(uc[unit].name, 'bar');
                 test.deepEqual(uc[unit].dependencies, ['#0_1']);
 
@@ -272,27 +262,25 @@ exports.unitCacheTest = {
     'UnitCache.readFile': {
 
         'must read file to the unit cache': function(test) {
-            var cwd = 'test/node/fixtures/read',
-                fileName = 'main.js';
+            var cwd = 'test/node/fixtures/read';
             var uc = UnitCache({
                 cwd: cwd
             });
-            var unit = uc.readFile(fileName);
-            test.equal(uc[unit].file, path.resolve(cwd, fileName));
+            var unit = uc.readFile('main.js');
+            test.equal(uc[unit].file, path.resolve(cwd, 'main.js'));
             test.equal(uc[unit].name, 'main');
             test.deepEqual(uc[unit].dependencies, ['util.foo', '*']);
             test.done();
         },
 
         'must use cache for readed files': function(test) {
-            var cwd = 'test/node/fixtures/read',
-                fileName = 'main.js';
+            var cwd = 'test/node/fixtures/read';
             var uc = UnitCache({
                 cwd: cwd
             });
-            uc.readFile(fileName);
+            uc.readFile('main.js');
             test.equals(uc.length, 1);
-            uc.readFile(fileName);
+            uc.readFile('main.js');
             test.equals(uc.length, 1);
             test.done();
         }
@@ -302,27 +290,25 @@ exports.unitCacheTest = {
     'UnitCache.readUnit': {
 
         'must read file to the unit cache': function(test) {
-            var unitName = 'main',
-                unitPath = 'test/node/fixtures/read';
+            var unitPath = 'test/node/fixtures/read';
             var uc = UnitCache({
                 unitPath: [unitPath]
             });
-            var unit = uc.readUnit(unitName);
+            var unit = uc.readUnit('main');
             test.equal(uc[unit].file, path.resolve(unitPath, 'main.js'));
-            test.equal(uc[unit].name, unitName);
+            test.equal(uc[unit].name, 'main');
             test.deepEqual(uc[unit].dependencies, ['util.foo', '*']);
             test.done();
         },
 
         'must use cache for readed files': function(test) {
-            var unitName = 'main',
-                unitPath = 'test/node/fixtures/read';
+            var unitPath = 'test/node/fixtures/read';
             var uc = UnitCache({
                 unitPath: [unitPath]
             });
-            uc.readUnit(unitName);
+            uc.readUnit('main');
             test.equals(uc.length, 1);
-            uc.readUnit(unitName);
+            uc.readUnit('main');
             test.equals(uc.length, 1);
             test.done();
         },

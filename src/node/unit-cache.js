@@ -39,8 +39,11 @@ module.exports = function(options) {
     //
     var fileExternals = {};
 
-    // List of the paths that are used to find the Gumup units.
-    var unitPath = [];
+    // The Gumup units mapping to the files.
+    //
+    //  '<unit_file_path>': [<unit_id>, ...]
+    //
+    var fileUnits = {};
 
     // List of the processed Gumup units.
     //
@@ -52,17 +55,13 @@ module.exports = function(options) {
     //
     var unitCache = [];
 
-    // The Gumup units mapping to the files.
-    //
-    //  '<unit_file_path>': [<unit_id>, ...]
-    //
-    var fileUnits = {};
-
+    // Reads unit declaration by file name.
     unitCache.readFile = function(fileName) {
         var file = path.resolve(cwd, fileName);
         return read(file);
     };
 
+    // Reads unit declaration by unit name.
     unitCache.readUnit = function(name) {
         var fileName = name.split('.').join(path.sep) + '.js';
         var files = [];
@@ -82,6 +81,9 @@ module.exports = function(options) {
         return read(files[0]);
     };
 
+    // List of the paths that are used to find the Gumup units.
+    var unitPath = [];
+
     parseOptions();
 
     function parseOptions() {
@@ -90,7 +92,7 @@ module.exports = function(options) {
         options = options || {};
 
         // Parse CWD.
-        cwd = options.cwd || '';
+        cwd = options.cwd || '.';
 
         // Parse encoding.
         encoding = options.encoding || 'utf-8';

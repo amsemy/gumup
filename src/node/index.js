@@ -9,7 +9,7 @@
 'use strict';
 
 var unitCache = require('./unit-cache');
-var gumupNamespace = require('./gumup-namespace');
+var gumupNamespace = require('./namespace');
 
 /**
  * Lets to use external units in the gumup units.
@@ -35,15 +35,15 @@ var gumupNamespace = require('./gumup-namespace');
 
 /**
  * @namespace  GumupOptions
- * @property  {string} [cwd]
+ * @property  {string} [cwd='.']
  *            Current work dir.
  * @property  {string} [encoding='utf-8']
  *            Unit files encoding.
- * @property  {GumupOptions~externals[]} [externals]
+ * @property  {GumupOptions~externals[]} [externals=[]]
  *            External units description.
- * @property  {GumupOptions~gumupSpy} [gumupSpy]
+ * @property  {GumupOptions~gumupSpy} [gumupSpy=GumupSpy]
  *            Constructor of the GumupSpy, used to parse the Gumup units.
- * @property  {string[]} [unitPath]
+ * @property  {string[]} [unitPath=['.']]
  *            Paths that are used to find the Gumup units (absolute or relative
  *            to `cwd`).
  */
