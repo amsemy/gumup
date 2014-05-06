@@ -245,36 +245,35 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.unit('a', function() {})
+                ns.unit('a', init("A"))
                     .require('d')
                     .require('e');
-                ns.unit('b', function() {})
+                ns.unit('b', init("B"))
                     .require('e');
-                ns.unit('c', function() {})
+                ns.unit('c', init("C"))
                     .require('h')
                     .require('f');
-                ns.unit('d', function() {})
+                ns.unit('d', init("D"))
                     .require('g');
-                ns.unit('e', function() {})
+                ns.unit('e', init("E"))
                     .require('h');
-                ns.unit('f', function() {})
+                ns.unit('f', init("F"))
                     .require('i');
-                ns.unit('g', function() {})
+                ns.unit('g', init("G"))
                     .require('h')
                     .require('j');
-                ns.unit('h', function() {})
+                ns.unit('h', init("H"))
                     .require('k');
-                ns.unit('i', function() {})
+                ns.unit('i', init("I"))
                     .require('l');
-                ns.unit('j', function() {})
+                ns.unit('j', init("J"))
                     .require('k');
-                ns.unit('k', function() {});
-                ns.unit('l', function() {})
+                ns.unit('k', init("K"));
+                ns.unit('l', init("L"))
                     .require('b')
                     .require('k');
-                expect(function() {
-                    ns.init();
-                }).not.toThrow();
+                ns.init();
+                expect(ns.solution).toBe("KHJGDEABLIFC");
             });
 
             it("must inject resolved dependencies", function() {
