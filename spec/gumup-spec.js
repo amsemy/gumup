@@ -329,9 +329,8 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.unit('a', function() {}).require('b');
-                ns.unit('b', function() {}).require('c');
-                ns.unit('c', function() {}).require('a');
+                ns.unit('a', function() {}).require('*');
+                ns.unit('b', function() {}).require('*');
                 expect(function() {
                     ns.init();
                 }).toThrow();
@@ -339,8 +338,9 @@
                 //------------------------------------------------------------
                 ns = new gumup.constructor();
 
-                ns.unit('a', function() {}).require('*');
-                ns.unit('b', function() {}).require('*');
+                ns.unit('a', function() {}).require('b');
+                ns.unit('b', function() {}).require('c');
+                ns.unit('c', function() {}).require('a');
                 expect(function() {
                     ns.init();
                 }).toThrow();

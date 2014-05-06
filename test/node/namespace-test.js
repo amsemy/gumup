@@ -217,6 +217,86 @@ exports.unitCacheTest = {
                     'c.js'
                 ]);
                 test.done();
+            },
+
+            'must catch recursive dependencies [AB]': function(test) {
+                var uc = UnitCacheStub({
+                    'a': ['b'],
+                    'b': ['a'],
+                });
+                var ns = new Namespace(uc);
+                ns.add('a.js');
+                test.throws(function() {
+                    ns.resolve();
+                });
+                test.done();
+            },
+
+            'must catch recursive dependencies [AB] with required units': function(test) {
+                var uc = UnitCacheStub({
+                    'a': ['*'],
+                    'b': ['*']
+                });
+                var ns = new Namespace(uc);
+                ns.add('a.js');
+                ns.add('b.js');
+                test.throws(function() {
+                    ns.resolve();
+                });
+                test.done();
+            },
+
+            'must catch recursive dependencies [ABC]': function(test) {
+                var uc = UnitCacheStub({
+                    'a': ['b'],
+                    'b': ['c'],
+                    'c': ['a']
+                });
+                var ns = new Namespace(uc);
+                ns.add('a.js');
+                test.throws(function() {
+                    ns.resolve();
+                });
+                test.done();
+            },
+
+            'must catch recursive dependencies [ABC] with required units': function(test) {
+                var uc = UnitCacheStub({
+                    'a': ['*'],
+                    'b': ['c'],
+                    'c': ['a']
+                });
+                var ns = new Namespace(uc);
+                ns.add('a.js');
+                ns.add('b.js');
+                test.throws(function() {
+                    ns.resolve();
+                });
+                test.done();
+            },
+
+            'must catch recursive dependencies [ABCDEFGHIJKL]': function(test) {
+                var uc = UnitCacheStub({
+                    'a': ['d', 'e'],
+                    'b': ['e'],
+                    'c': ['h', 'f'],
+                    'd': ['g'],
+                    'e': ['h'],
+                    'f': ['i'],
+                    'g': ['h', 'j'],
+                    'h': ['i', 'k'],
+                    'i': ['l'],
+                    'j': ['k'],
+                    'k': [],
+                    'l': ['b', 'k']
+                });
+                var ns = new Namespace(uc);
+                ns.add('a.js');
+                ns.add('c.js');
+                test.throws(function() {
+                    ns.resolve();
+                });
+                test.done();
             }
 
         }
