@@ -297,6 +297,18 @@ exports.unitCacheTest = {
                     ns.resolve();
                 });
                 test.done();
+            },
+
+            'must catch nonexistent dependencies': function(test) {
+                var uc = UnitCacheStub({
+                    'aaa': ['bbb']
+                });
+                var ns = new Namespace(uc);
+                ns.add('aaa.js');
+                test.throws(function() {
+                    ns.resolve();
+                });
+                test.done();
             }
 
         }

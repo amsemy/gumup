@@ -29,32 +29,12 @@ Namespace.prototype.resolve = function() {
 
     loadNamespace(namespace, units, unitCache);
 
-    console.log('\n=======================================================================================');
-    console.log('RESOLVE');
-    console.log('\n=============================');
-    console.log('unitCache:');
-    console.log(unitCache);
-    console.log('\nnamespace:');
-    console.log(namespace);
-
     for (var i = 0, il = units.length; i < il; i++) {
         var queue = [units[i]];
         var stack = [];
         var direction = true;
 
         while (true) {
-
-            console.log('\n-----------------------------');
-            console.log('queue:');
-            console.log(queue);
-            console.log('\nstack:');
-            console.log(stack);
-            console.log('\ndirection:');
-            console.log(direction);
-            console.log('\nprocessed:');
-            console.log(processed);
-            console.log('\nresult:');
-            console.log(result);
 
             // Move in queue or get back via stack.
             var unit = direction ? queue.shift() : stack.pop();
@@ -68,8 +48,6 @@ Namespace.prototype.resolve = function() {
             }
             // Check for existing unprocessed dependencies.
             var deps = getDependencies(unit, unitCache, namespace, processed);
-            console.log('\n### deps');
-            console.log(deps);
             if (deps.length) {
                 if (direction) {
                     queue.unshift.apply(queue, deps);
@@ -85,16 +63,10 @@ Namespace.prototype.resolve = function() {
                 processed.add(unit);
                 result.push(unitCache[unit].file);
                 direction = false;
-                // Check the exit point.
-//                if (!stack.length) {
-//                    break;
-//                }
             }
         }
 
     }
-    console.log('\n=============================');
-    console.log('RESOLVED!!!');
     return result;
 };
 
