@@ -23,11 +23,19 @@ Namespace.prototype.add = function(fileName) {
 Namespace.prototype.resolve = function() {
     var unitCache = this._unitCache,
         units = this._units;
-    var namespace = [],
-        processed = {},
+    var namespace = new util.Set(),
+        processed = new util.Set(),
         result = [];
 
     loadNamespace(namespace, units, unitCache);
+
+    console.log('\n=======================================================================================');
+    console.log('RESOLVE');
+    console.log('\n=============================');
+    console.log('unitCache:');
+    console.log(unitCache);
+    console.log('\nnamespace:');
+    console.log(namespace);
 
     for (var i = 0, il = units.length; i < il; i++) {
         var queue = [units[i]];
@@ -35,38 +43,58 @@ Namespace.prototype.resolve = function() {
         var direction = true;
 
         while (true) {
+
+            console.log('\n-----------------------------');
+            console.log('queue:');
+            console.log(queue);
+            console.log('\nstack:');
+            console.log(stack);
+            console.log('\ndirection:');
+            console.log(direction);
+            console.log('\nprocessed:');
+            console.log(processed);
+            console.log('\nresult:');
+            console.log(result);
+
             // Move in queue or get back via stack.
             var unit = direction ? queue.shift() : stack.pop();
+            if (unit == null) {
+                break;
+            }
             // Skip processed units.
-            if (direction && processed[unit]) {
+            if (direction && processed.contains(unit)) {
                 direction = false;
                 continue;
             }
             // Check for existing unprocessed dependencies.
             var deps = getDependencies(unit, unitCache, namespace, processed);
+            console.log('\n### deps');
+            console.log(deps);
             if (deps.length) {
                 if (direction) {
-                    queue.unshift(deps);
+                    queue.unshift.apply(queue, deps);
                 }
                 for (var s = 0, sl = stack.length; s < sl; s++) {
-                    if (stack[s] == unit) {
+                    if (stack[s] === unit) {
                         throw util.error('Recursive dependency'); // TODO: print stack
                     }
                 }
                 stack.push(unit);
                 direction = true;
             } else {
-                processed[unit] = true;
+                processed.add(unit);
                 result.push(unitCache[unit].file);
                 direction = false;
                 // Check the exit point.
-                if (!stack.length) {
-                    break;
-                }
+//                if (!stack.length) {
+//                    break;
+//                }
             }
         }
 
     }
+    console.log('\n=============================');
+    console.log('RESOLVED!!!');
     return result;
 };
 
@@ -74,16 +102,18 @@ function getDependencies(unit, unitCache, namespace, processed) {
     var deps = unitCache[unit].dependencies;
     var result = [];
     // Iterate over all unit dependencies.
+    unitDeps:
     for (var i = 0, il = deps.length; i < il; i++) {
         var reqName = deps[i];
         var depUnit, j, jl;
-        if (reqName.charAt(reqName.length - 1) == '*') {
+        if (reqName.charAt(reqName.length - 1) === '*') {
             // Iterate over uncapped `*` declarations.
             var baseName = reqName.substring(0, reqName.length - 1);
             for (j = 0, jl = namespace.length; j < jl; j++) {
                 depUnit = namespace[j];
-                if (unitCache[depUnit].name.indexOf(baseName) == 0
-                        && !processed[depUnit]) {
+                if (unitCache[depUnit].name.indexOf(baseName) === 0
+                        && depUnit !== unit
+                        && !processed.contains(depUnit)) {
                     result.push(depUnit);
                 }
             }
@@ -91,27 +121,39 @@ function getDependencies(unit, unitCache, namespace, processed) {
             // A simple dependency.
             for (j = 0, jl = namespace.length; j < jl; j++) {
                 depUnit = namespace[j];
-                if (unitCache[depUnit].name == reqName
-                        && !processed[depUnit]) {
-                    result.push(depUnit);
-                    break;
+                if (unitCache[depUnit].name === reqName) {
+                    if (!processed.contains(depUnit)) {
+                        result.push(depUnit);
+                    }
+                    continue unitDeps;
                 }
             }
             throw util.error('Invalid dependency "' + reqName + '"');
         }
     }
+    return result;
 }
 
 function loadNamespace(namespace, units, unitCache) {
     for (var i = 0, il = units.length; i < il; i++) {
-        var unit = units[i];
-        namespace.push(unit);
-        var deps = unitCache[unit].dependencies;
-        for (var j = 0, jl = deps.length; j < jl; j++) {
-            var reqName = deps[j];
-            if (reqName.charAt(reqName.length - 1) != '*') {
-                var reqUnit = unitCache.readUnit(reqName);
-                namespace.push(reqUnit);
+        var queue = new util.Set([units[i]]);
+        while (true) {
+            // Move in queue.
+            var unit = queue.pop();
+            if (unit == null) {
+                break;
+            }
+            namespace.add(unit);
+            // Read unit dependencies.
+            var deps = unitCache[unit].dependencies;
+            for (var j = 0, jl = deps.length; j < jl; j++) {
+                var reqName = deps[j];
+                if (reqName.charAt(reqName.length - 1) !== '*') {
+                    var reqUnit = unitCache.readUnit(reqName);
+                    if (!namespace.contains(reqUnit)) {
+                        queue.add(reqUnit);
+                    }
+                }
             }
         }
     }
