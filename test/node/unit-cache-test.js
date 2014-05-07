@@ -54,6 +54,55 @@ exports.unitCacheTest = {
 
         'GumupOptions~externals': {
 
+            'must check property value': function(test) {
+                test.throws(function() {
+                    UnitCache({
+                        externals: [
+                            {}
+                        ]
+                    });
+                });
+                test.throws(function() {
+                    UnitCache({
+                        externals: [
+                            {
+                                usages: []
+                            }
+                        ]
+                    });
+                });
+                test.throws(function() {
+                    UnitCache({
+                        externals: [
+                            {
+                                usages: 'bar.js'
+                            }
+                        ]
+                    });
+                });
+                test.throws(function() {
+                    UnitCache({
+                        externals: [
+                            {
+                                globals: 'extLib',
+                                usages: ['bar.js']
+                            }
+                        ]
+                    });
+                });
+                test.throws(function() {
+                    UnitCache({
+                        externals: [
+                            {
+                                files: 'extLib.js',
+                                usages: ['bar.js']
+                            }
+                        ]
+                    });
+                });
+                test.done();
+            },
+
             'globals property with one value': function(test) {
                 var uc = UnitCache({
                     cwd: 'test/node/fixtures/options',
@@ -181,6 +230,15 @@ exports.unitCacheTest = {
 
         'GumupOptions~gumupSpy': {
 
+            'must check property value': function(test) {
+                test.throws(function() {
+                    UnitCache({
+                        gumupSpy: {}
+                    });
+                });
+                test.done();
+            },
+
             'default value': function(test) {
                 var uc = UnitCache({
                     cwd: 'test/node/fixtures/options'
@@ -223,6 +281,15 @@ exports.unitCacheTest = {
         },
 
         'GumupOptions~unitPath': {
+
+            'must check property value': function(test) {
+                test.throws(function() {
+                    UnitCache({
+                        unitPath: 'test/node/fixtures/options'
+                    });
+                });
+                test.done();
+            },
 
             'default value': function(test) {
                 var cwd = 'test/node/fixtures/options';

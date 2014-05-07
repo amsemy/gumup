@@ -48,6 +48,10 @@ exports.error = function(msg, details) {
     return err;
 };
 
+exports.isArray = function(obj) {
+    return Object.prototype.toString.call(obj) == "[object Array]";
+};
+
 exports.optionsError = function(msg) {
     var err = new Error(msg);
     err.name = 'GumupOptionsError';

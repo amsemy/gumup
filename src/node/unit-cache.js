@@ -105,8 +105,6 @@ module.exports = function(options) {
     parseOptions();
 
     function parseOptions() {
-        // TODO: check options
-
         options = options || {};
 
         // Parse CWD.
@@ -124,12 +122,20 @@ module.exports = function(options) {
                     extUnitName = null;
 
                 // Add the external unit description.
+                if (extDesc.globals && !util.isArray(extDesc.globals)) {
+                    throw util.optionsError(
+                            'Invalid "externals.globals" property');
+                }
                 var extId = externals.push({
                     globals: extDesc.globals || []
                 }) - 1;
 
                 // Convert file list to the chain of fake Gumup units.
                 if (extDesc.files) {
+                    if (!util.isArray(extDesc.files)) {
+                        throw util.optionsError(
+                                'Invalid "externals.files" property');
+                    }
                     // TODO: lib redeclaration
                     for (var f = 0, fl = extDesc.files.length; f < fl; f++) {
                         var extFile = path.resolve(cwd, extDesc.files[f]);
@@ -150,7 +156,9 @@ module.exports = function(options) {
                 }
 
                 // Add mapping to the Gumup units.
-                if (extDesc.usages && extDesc.usages.length) {
+                if (extDesc.usages
+                        && util.isArray(extDesc.usages)
+                        && extDesc.usages.length) {
                     for (var d = 0, dl = extDesc.usages.length; d < dl; d++) {
                         var file = path.resolve(cwd, extDesc.usages[d]);
                         if (!fileExternals[file]) {
@@ -160,18 +168,24 @@ module.exports = function(options) {
                     }
                 } else {
                     throw util.optionsError(
-                            'Invalid using of "externals.usages" property');
+                            'Invalid "externals.usages" property');
                 }
             }
         }
 
         // Parse gumupSpy.
         var gumupSpy = options.gumupSpy;
+        if (gumupSpy && typeof gumupSpy !== 'function') {
+            throw util.optionsError('Invalid "gumupSpy" property');
+        }
         Gumup = (gumupSpy ? gumupSpy(GumupSpy) || GumupSpy : GumupSpy);
 
         // Parse unitPath.
-        unitPath = (options.unitPath && options.unitPath.length
-                ? options.unitPath : ['.']);
+        unitPath = options.unitPath;
+        if (unitPath && !util.isArray(unitPath)) {
+            throw util.optionsError('Invalid "unitPath" property');
+        }
+        unitPath = (unitPath && unitPath.length ? unitPath : ['.']);
     }
 
     function add(declaration) {

@@ -57,7 +57,6 @@ var UnitCache = require('./unit-cache');
  *         Module options.
  */
 var Gumup = function(options) {
-    options = options || {};
     this._unitCache = UnitCache(options);
 };
 
