@@ -8,8 +8,8 @@
 
 'use strict';
 
-var unitCache = require('./unit-cache');
-var gumupNamespace = require('./namespace');
+var Namespace = require('./namespace');
+var UnitCache = require('./unit-cache');
 
 /**
  * Lets to use external units in the gumup units.
@@ -27,10 +27,11 @@ var gumupNamespace = require('./namespace');
  * Is used to extend the Gumup functionality.
  *
  * @callback  GumupOptions~gumupSpy
- * TODO: @param  {Function} GumupSpy
- *         The base implementation.
- * TODO: @returns  {undefined|Function}
- *
+ * @param  {Function} GumupSpy
+ *         Default implementation that can be extended.
+ * @returns  {undefined|Function}
+ *           A custom implementation. If is undefined, then the default
+ *           implementation will be used.
  */
 
 /**
@@ -48,14 +49,30 @@ var gumupNamespace = require('./namespace');
  *            to `cwd`).
  */
 
-module.exports = function(options) {
-
-    var unitCache = unitCache();
-
-    return {
-        create: function() {
-
-        }
-    };
-
+/**
+ * Create the Gumup module.
+ *
+ * @constructor
+ * @param  {GumupOptions} [options]
+ *         Module options.
+ */
+var Gumup = function(options) {
+    options = options || {};
+    this._unitCache = UnitCache(options);
 };
+
+/**
+ * Resolve the unit dependencies.
+ *
+ * @returns  {string[]}
+ *           Resolved file paths.
+ */
+Gumup.prototype.resolve = function(files) {
+    var ns = new Namespace(this._unitCache);
+    for (var i = 0, il = files.length; i < il; i++) {
+        ns.add(files[i]);
+    }
+    return ns.resolve();
+};
+
+module.exports = Gumup;
