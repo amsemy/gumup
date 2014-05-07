@@ -41,9 +41,15 @@ module.exports = function(options) {
 
     // The Gumup units mapping to the files.
     //
-    //  '<unit_file_path>': [<unit_id>, ...]
+    //  '<unit_file_path>': <unit_id>
     //
     var fileUnits = {};
+
+    // The Gumup units mapping to the files.
+    //
+    //  '<unit_name>': <unit_id>
+    //
+    var nameUnits = {};
 
     // List of the processed Gumup units.
     //
@@ -58,11 +64,19 @@ module.exports = function(options) {
     // Reads unit declaration by file name.
     unitCache.readFile = function(fileName) {
         var file = path.resolve(cwd, fileName);
+        var unit = fileUnits[file];
+        if (unit != null) {
+            return unit;
+        }
         return read(file);
     };
 
     // Reads unit declaration by unit name.
     unitCache.readUnit = function(name) {
+        var unit = nameUnits[name];
+        if (unit != null) {
+            return unit;
+        }
         var fileName = name.split('.').join(path.sep) + '.js';
         var files = [];
         for (var i = 0, il = unitPath.length; i < il; i++) {
@@ -163,15 +177,11 @@ module.exports = function(options) {
     function add(declaration) {
         var unit = unitCache.push(declaration) - 1;
         fileUnits[declaration.file] = unit;
+        nameUnits[declaration.name] = unit;
         return unit;
     }
 
     function read(file) {
-        var unit = fileUnits[file];
-        if (unit != null) {
-            return unit;
-        }
-
         var params = [],
             externalDeps = [];
 

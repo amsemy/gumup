@@ -302,14 +302,28 @@ exports.unitCacheTest = {
         },
 
         'must use cache for readed files': function(test) {
-            var unitPath = 'test/node/fixtures/read';
             var uc = UnitCache({
-                unitPath: [unitPath]
+                unitPath: ['test/node/fixtures/read']
             });
             uc.readUnit('main');
             test.equals(uc.length, 1);
             uc.readUnit('main');
             test.equals(uc.length, 1);
+            test.done();
+        },
+
+        'must use cache for external units': function(test) {
+            var uc = UnitCache({
+                cwd: 'test/node/fixtures/options',
+                externals: [
+                    {
+                        globals: ['extLib'],
+                        files: ['extLib.js'],
+                        usages: ['bar.js']
+                    }
+                ]
+            });
+            test.equal(uc.readUnit('#0_0'), 0);
             test.done();
         },
 
