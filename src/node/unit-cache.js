@@ -77,11 +77,10 @@ module.exports = function(options) {
                 unitPathDetails.push(path.resolve(cwd, unitPath[i]));
             }
             throw util.error('Unable to find "' + name
-                        + '" unit in the unit path',
-                    unitPathDetails);
+                    + '" unit in the unit path', unitPathDetails);
         } else if (files.length > 1) {
-            throw util.error('Too many files in the unit path for "'
-                    + name + '" unit');
+            throw util.error('Too many files in the unit path for "' + name
+                    + '" unit', files);
         }
         return read(files[0]);
     };

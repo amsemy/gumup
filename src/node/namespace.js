@@ -54,7 +54,9 @@ Namespace.prototype.resolve = function() {
                 }
                 for (var s = 0, sl = stack.length; s < sl; s++) {
                     if (stack[s] === unit) {
-                        throw util.error('Recursive dependency'); // TODO: print stack
+                        stack.push(unit);
+                        throw util.error('Recursive dependency',
+                                getStackDetails(stack, unitCache));
                     }
                 }
                 stack.push(unit);
@@ -104,6 +106,14 @@ function getDependencies(unit, unitCache, namespace, processed) {
         }
     }
     return result;
+}
+
+function getStackDetails(stack, unitCache) {
+    var details = [];
+    for (var i = 0, il = stack.length; i < il; i++) {
+        details.push(unitCache[stack[i]].name);
+    }
+    return details;
 }
 
 function loadNamespace(namespace, units, unitCache) {
