@@ -72,8 +72,13 @@ module.exports = function(options) {
             }
         }
         if (!files.length) {
+            var unitPathDetails = [];
+            for (i = 0, il = unitPath.length; i < il; i++) {
+                unitPathDetails.push(path.resolve(cwd, unitPath[i]));
+            }
             throw util.error('Unable to find "' + name
-                    + '" unit in the unit path');
+                        + '" unit in the unit path',
+                    unitPathDetails);
         } else if (files.length > 1) {
             throw util.error('Too many files in the unit path for "'
                     + name + '" unit');

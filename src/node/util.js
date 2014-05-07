@@ -39,11 +39,11 @@ exports.declError = function(msg) {
     return err;
 };
 
-exports.error = function(msg, e) {
+exports.error = function(msg, details) {
     var err = new Error(msg);
     err.name = 'GumupError';
-    if (e) {
-        err.origError = e;
+    if (details) {
+        err.details = details;
     }
     return err;
 };
