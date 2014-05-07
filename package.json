@@ -4,6 +4,7 @@
     "description": "Simple dynamic JS modules",
     "author": "Amsemy",
     "license": "MIT",
+    "homepage": "https://github.com/amsemy/gumup",
     "main": "./src/node/index.js",
     "repository": {
         "type": "git",
