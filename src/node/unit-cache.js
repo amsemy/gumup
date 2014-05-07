@@ -136,11 +136,15 @@ module.exports = function(options) {
                         throw util.optionsError(
                                 'Invalid "externals.files" property');
                     }
-                    // TODO: lib redeclaration
                     for (var f = 0, fl = extDesc.files.length; f < fl; f++) {
                         var extFile = path.resolve(cwd, extDesc.files[f]);
 
                         // Add the fake unit to the unit cache.
+                        if (fileUnits[extFile] != null) {
+                            throw util.optionsError('External unit file "'
+                                    + extDesc.files[f]
+                                    + '" has already been declared.');
+                        }
                         var extUnitDeps = (extUnitName ? [extUnitName] : []);
                         extUnitName = '#' + extId + '_' + f;
                         var extDeclaration = {
@@ -150,6 +154,9 @@ module.exports = function(options) {
                         };
                         add(extDeclaration);
                     }
+
+                    // The last file will be an external unit and the other
+                    // files will be its dependencies.
                     if (extUnitName) {
                         externals[extId].name = extUnitName;
                     }

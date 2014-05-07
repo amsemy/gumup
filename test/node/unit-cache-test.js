@@ -103,6 +103,25 @@ exports.unitCacheTest = {
                 test.done();
             },
 
+            'mustn\'t duplicate external units': function(test) {
+                test.throws(function() {
+                    UnitCache({
+                        cwd: 'test/node/fixtures/options',
+                        externals: [
+                            {
+                                files: ['extLib.js'],
+                                usages: ['bar.js']
+                            },
+                            {
+                                files: ['extLib.js'],
+                                usages: ['baz.js']
+                            }
+                        ]
+                    });
+                });
+                test.done();
+            },
+
             'globals property with one value': function(test) {
                 var uc = UnitCache({
                     cwd: 'test/node/fixtures/options',
