@@ -36,6 +36,6 @@ Hook `gumup.init()` to the page load event.
 
 ## Related
 
-Grunt task [grunt-gumup][] for resolve unit dependencies.
+Grunt task [grunt-gumup][] for resolving unit dependencies.
 
 [grunt-gumup]: https://github.com/amsemy/grunt-gumup
