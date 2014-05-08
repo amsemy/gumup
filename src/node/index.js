@@ -28,7 +28,7 @@ var UnitCache = require('./unit-cache');
  *
  * @callback  GumupOptions~gumupSpy
  * @param  {Function} GumupSpy
- *         Default implementation that can be extended.
+ *         Current implementation of the GumupSpy that can be extended.
  * @returns  {undefined|Function}
  *           A custom implementation. If is undefined, then the default
  *           implementation will be used.
