@@ -33,3 +33,9 @@ function implementation(units) {
 }
 ```
 Hook `gumup.init()` to the page load event.
+
+## Related
+
+Grunt task [grunt-gumup][] for resolve unit dependencies.
+
+[grunt-gumup]: https://github.com/amsemy/grunt-gumup
