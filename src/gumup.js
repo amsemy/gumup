@@ -70,7 +70,7 @@
         var obj = dir[unitName];
         if (obj == null) {
             obj = {};
-        } else if (typeof obj != "object") {
+        } else if (typeof obj !== "object") {
             error("Cann't create unit '" + name
                     + "' because there is an object on this path");
         }
@@ -204,11 +204,11 @@
         if (!checkUnitName(name)) {
             error("Invalid unit name '" + name + "'");
         }
-        if (typeof implementation != "function") {
+        if (typeof implementation !== "function") {
             error("Invalid implementation of '" + name + "' unit");
         }
         if (this._declarations[name]) {
-            error("Unit '" + name + "' has already been declared");
+            return new Declaration(implementation);
         }
         return this._declarations[name] = new Declaration(implementation);
     };
@@ -234,16 +234,16 @@
     // dependency.
     function forEach(declarations, reqName, callback) {
         var d;
-        if (reqName == "*") {
+        if (reqName === "*") {
             // Iterate over all declarations.
             for (d in declarations) {
                 callback.call(this, d);
             }
-        } else if (reqName.charAt(reqName.length - 1) == "*") {
+        } else if (reqName.charAt(reqName.length - 1) === "*") {
             // Iterate over uncapped `*` declarations.
             var baseName = reqName.substring(0, reqName.length - 1);
             for (d in declarations) {
-                if (d.indexOf(baseName) == 0) {
+                if (d.indexOf(baseName) === 0) {
                     callback.call(this, d);
                 }
             }
@@ -259,7 +259,7 @@
 
     // Creates a valid path to the unit in the namespace.
     function mkdir(units, name) {
-        if (name != "") {
+        if (name !== "") {
             var parts = name.split(".");
             var path = "";
             for (var i = 0, len = parts.length; i < len; i++) {
@@ -267,7 +267,7 @@
                 path += part;
                 if (units[part] == null) {
                     units[part] = {};
-                } else if (typeof units[part] != "object") {
+                } else if (typeof units[part] !== "object") {
                     error("Cann't init unit '" + name
                             + "' because path element '" + path
                             + "' isn't an object");
@@ -280,7 +280,7 @@
     }
 
     function isArray(obj) {
-        return Object.prototype.toString.call(obj) == "[object Array]";
+        return Object.prototype.toString.call(obj) === "[object Array]";
     }
 
     // Namespace extension
@@ -295,7 +295,7 @@
         var destDecls = dest._declarations;
         for (var i = 0, len = injections.length; i < len; i++) {
             var injection = injections[i];
-            if (typeof injection != "object") {
+            if (typeof injection !== "object") {
                 error("Invalid injection [" + i + "] in inject settings");
             }
             var destName = injection.name;
@@ -348,7 +348,7 @@
             for (var i = 0, len = decl._dependencies.length; i < len; i++) {
                 var reqName = decl._dependencies[i];
                 forEach(srcDecls, reqName, function(depName) {
-                    if (depName != name) {
+                    if (depName !== name) {
                         pickUnit(srcDecls, destDecls, depName, picked, stack);
                     }
                 });
@@ -416,7 +416,7 @@
             for (var i = 0, len = decl._dependencies.length; i < len; i++) {
                 var reqName = decl._dependencies[i];
                 forEach(declarations, reqName, function(depName) {
-                    if (depName != name) {
+                    if (depName !== name) {
                         delete cache.root[depName];
                         cache.dependencies[name].push(depName);
                         resolve(declarations, depName, cache, resolved, stack);
