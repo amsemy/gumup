@@ -1183,11 +1183,11 @@
                 }).toThrow();
             });
 
-            it("must deny creating duplicates of units", function() {
-                ns.unit('aaa', function() {});
-                expect(function() {
-                    ns.unit('aaa', function() {});
-                }).toThrow();
+            it("must ignore unit redeclaration", function() {
+                ns.unit('aaa', defaultImpl("first"));
+                ns.unit('aaa', defaultImpl("second"));
+                ns.init();
+                expect(ns.units.aaa.value).toBe("first");
             });
 
         });
