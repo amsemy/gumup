@@ -1,6 +1,6 @@
 // Gumup
-// version: 0.2.1-rc.1
-// author: Amsemy
+// version: 0.2.1-rc.2
+// author: Amsemy <amsemy@gmail.com>
 // license: MIT
 (function() {
 
