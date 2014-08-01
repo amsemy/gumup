@@ -2,21 +2,20 @@
     "name": "gumup",
     "description": "Simple dynamic JS modules",
     "version": "0.2.1-rc.2",
-    "author": "Amsemy <amsemy@gmail.com>",
+    "authors": [
+        "Amsemy <amsemy@gmail.com>"
+    ],
     "license": "MIT",
     "homepage": "https://github.com/amsemy/gumup",
     "repository": {
         "type": "git",
         "url": "https://github.com/amsemy/gumup.git"
     },
-    "main": "src/node/index.js",
-    "devDependencies": {
-        "grunt": "~0.4",
-        "grunt-contrib-concat": "~0.4.0",
-        "grunt-contrib-uglify": "~0.4.0",
-        "grunt-contrib-jasmine": "~0.5.0",
-        "grunt-contrib-nodeunit": "~0.3.0"
-    },
+    "main": "gumup.js",
+    "ignore": [
+        "/*",
+        "!gumup.*"
+    ],
     "keywords": [
         "dependency",
         "gumup",

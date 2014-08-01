@@ -18,7 +18,7 @@ module.exports = function(grunt) {
                     banner: '<%= meta.banner %>'
                 },
                 files: {
-                    'dist/gumup.js': 'src/gumup.js'
+                    'gumup.js': 'src/gumup.js'
                 }
             }
         },
@@ -30,8 +30,11 @@ module.exports = function(grunt) {
                     report: 'gzip'
                 },
                 files: {
-                    'dist/gumup.min.js': 'dist/gumup.js'
+                    'gumup.min.js': 'gumup.js'
                 }
+            },
+            options: {
+                sourceMap: true
             }
         },
 
