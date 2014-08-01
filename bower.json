@@ -14,7 +14,7 @@
     "main": "gumup.js",
     "ignore": [
         "/*",
-        "!gumup.*"
+        "!/gumup.*"
     ],
     "keywords": [
         "dependency",
