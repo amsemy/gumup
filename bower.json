@@ -1,7 +1,7 @@
 {
     "name": "gumup",
     "description": "Simple dynamic JS modules",
-    "version": "0.2.2",
+    "version": "0.2.1",
     "authors": [
         "Amsemy <amsemy@gmail.com>"
     ],
