@@ -1,7 +1,7 @@
 {
     "name": "gumup",
     "description": "Simple dynamic JS modules",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "authors": [
         "Amsemy <amsemy@gmail.com>"
     ],
@@ -11,10 +11,10 @@
         "type": "git",
         "url": "https://github.com/amsemy/gumup.git"
     },
-    "main": "gumup.js",
+    "main": "dist/gumup.js",
     "ignore": [
         "/*",
-        "!/gumup.*"
+        "!/dist"
     ],
     "keywords": [
         "dependency",
