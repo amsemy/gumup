@@ -1,3 +1,5 @@
+#### PROJECT IS NO LONGER SUPPORTED
+
 # Gumup
 
 Gumup is simple JavaScript library that lets to control the order of modules initialization.
